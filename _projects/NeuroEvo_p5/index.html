@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<title>NeuroEvo</title>
+	<link rel='shortcut icon' type='image/x-icon' href='favicon.ico' />
+	<!-- Load Plotly.js -->
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<!-- Load TensorFlow.js -->
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.11.2"></script>
+	<!-- Load p5.js -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/p5.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/addons/p5.dom.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/addons/p5.sound.min.js"></script>
+	<!-- Load my code -->
+	<script src="src/sketch.js"></script>
+	<script src="src/math.js"></script>
+	<script src="src/agent.js"></script>
+	<script src="src/sensors.js"></script>
+	<script src="src/world.js"></script>
+	<script src="src/quadtree.js"></script>
+	<script src="src/linkedlist.js"></script>
+	<script src="src/brain.js"></script>
+</head>
+
+<body>
+
+	<div class="wrapper">
+		<div class='divLeft' id="canvascontainer"></div>
+		<div class='divLeft' id="interface">
+			<p>
+				Speed:
+				<input id="speedSlider" type="range" min="1" max="10" value="1">
+				<span id="speed">1</span>
+			</p>
+			<p>
+				Metabolic Rate:
+				<input id="metabolSlider" type="range" min="1" max="50" value="20">
+				<span id="metabol"></span>
+			</p>
+			<p>
+				Mutation Prob:
+				<input id="mutationSlider" type="range" min="0" max="100" value="5">
+				<span id="mut"></span>
+			</p>
+			<p>
+				Debug:
+				<input id="debug" type="checkbox"></input>
+			</p>
+			<p>
+				Render:
+				<input id="show" type="checkbox" checked></input>
+			</p>
+			<p>
+				Freeze:
+				<input id="stop" type="checkbox"></input>
+			</p>
+			<p>
+				Circle:
+				<input id="circle" type="checkbox"></input>
+			</p>
+			<p>
+				Immortality:
+				<input id="immortal" type="checkbox"></input>
+			</p>
+		</div>
+		<div class='divLeft' id="chart"></div>
+	</div>
+
+</body>
+
+</html>

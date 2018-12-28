@@ -1,0 +1,32 @@
+- name: p5.0.5
+  element: <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/p5.min.js"></script>
+
+- name: p5.0.5.dom
+  element: <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/addons/p5.dom.min.js"></script>
+
+- name: p5.0.5.sound
+  element: <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/addons/p5.sound.min.js"></script>
+
+- name: p5.0.7
+  element: <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.min.js"></script>
+
+- name: p5.0.7.dom
+  element: <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.dom.min.js"></script>
+
+- name: p5.0.7.sound
+  element: <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.sound.min.js"></script>
+
+- name: flexbox
+  element: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flexboxgrid/6.3.1/flexboxgrid.min.css" />
+
+- name: live
+  element: <script type="text/javascript" src="http://livejs.com/live.js"></script>
+
+- name: mathjax
+  element: <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+
+- name: tfjs
+  element: <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.14.1/dist/tf.min.js"></script>
+
+- name: plotly
+  element: <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
