@@ -19,26 +19,3 @@
     margin-left: -50vw;
     left: 50%;
 }
-
-.img__description_layer {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0, 0, 50, 0.6);
-    color: #fff;
-    visibility: hidden;
-    opacity: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    /* transition effect. not necessary */
-    transition: opacity 0.2s, visibility 0.2s;
-}
-
-.post-content p img {
-    display: block;
-    margin: auto;
-}

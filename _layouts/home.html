@@ -6,9 +6,8 @@ layout: default
     {%- if page.title -%}
         <h1 class="page-heading">{{ page.title }}</h1>
     {%- endif -%}
-    
     {{ content }}
-    
+    <h2 class="post-list-heading">{{ page.list_title | default: "Posts" }}</h2>
     <ul class="post-list">
         {% assign projects = site.projects | sort: 'date' | reverse %} 
         {% for project in projects %}
@@ -27,9 +26,7 @@ layout: default
                     {{ project.title | escape }}
                 </a>
             </h3>
-            {%- if site.show_excerpts -%} {{ project.excerpt }} {%- endif -%}
         </li>
-
         {% endfor %}
     </ul>
 </div>
