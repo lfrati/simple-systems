@@ -34,53 +34,6 @@ let foodGrowthRate = 1;
 
 let epoch = 0;
 
-function deleteINDEXEDDB(databaseName) {
-    var req = indexedDB.deleteDatabase(databaseName);
-    req.onsuccess = function() {
-        console.log('Deleted ' + databaseName + ' successfully');
-    };
-    req.onerror = function() {
-        console.log("Couldn't delete " + databaseName);
-    };
-    req.onblocked = function() {
-        console.log("Couldn't delete " + databaseName + ' due to the operation being blocked');
-    };
-}
-
-async function loadModels() {
-    let newAgents = [];
-    let models = await tf.io.listModels();
-    console.log('Loading Population');
-    for (const [key, value] of Object.entries(models)) {
-        let model = await tf.loadModel(key);
-        const agent = new Agent();
-        agent.brain.model = model;
-        newAgents.push(agent);
-    }
-    console.log('Population loaded');
-
-    if (newAgents.length > 0) {
-        world.agents = [];
-        world.agents = newAgents;
-    }
-}
-
-function saveModels() {
-    var counter = 0;
-    deleteINDEXEDDB('tensorflowjs');
-    console.log('Saving population at epoch ' + epoch);
-    let promises = world.agents.reduce((promises, agent) => {
-        promises.push(
-            agent.brain.model.save('indexeddb://' + epoch + '-' + agent.age + '-' + counter)
-        );
-        counter++;
-        return promises;
-    }, []);
-    Promise.all(promises).then(() => {
-        console.log('Population saved');
-    });
-}
-
 function setupPlotly() {
     // Setup plotting --------------------------------------------------------
     var trace1 = {
@@ -174,10 +127,6 @@ function updatePlots() {
     }
 }
 
-function checkMousePressed() {
-    return mouseIsPressed && 0 < mouseX && mouseX < width && 0 < mouseY && mouseY < height;
-}
-
 function checkSliders() {
     // How fast should we speed up
     let cycles = speedSlider.value();
@@ -208,6 +157,10 @@ function setup() {
     tf.setBackend('cpu');
     // Setup buttons, sliders and canvas -------------------------------------
     let canvas = createCanvas(width, height);
+
+    canvas.mousePressed(() => {
+        world.agents[0].position = createVector(mouseX, mouseY);
+    });
     canvas.parent('canvascontainer');
     debug = select('#debug');
     show = select('#show');
@@ -220,26 +173,6 @@ function setup() {
     metabolSpan = select('#metabol');
     mutationSlider = select('#mutationSlider');
     mutationSpan = select('#mut');
-
-    save = createButton('save')
-        .position(10, 10)
-        .mousePressed(saveModels);
-
-    load = createButton('load')
-        .position(60, 10)
-        .mousePressed(loadModels);
-
-    reset = createButton('reset')
-        .position(110, 10)
-        .mousePressed(() => populateWorld());
-
-    // del = createButton('delete')
-    //     .position(200, 10)
-    //     .style('background-color', 'hsl(12, 100%, 55%)')
-    //     .mousePressed(() => deleteINDEXEDDB('tensorflowjs'));
-
-    // Clear indexeddb from previous tensorflowjs models
-    deleteINDEXEDDB('tensorflowjs');
 
     setupPlotly();
 
@@ -277,11 +210,5 @@ function draw() {
             10,
             20
         );
-    }
-
-    if (checkMousePressed()) {
-        //let newFood = createVector(mouseX, mouseY);
-        //world.storeFood(newFood);
-        world.agents[0].position = createVector(mouseX, mouseY);
     }
 }
