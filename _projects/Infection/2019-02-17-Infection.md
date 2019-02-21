@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 'Spreading infections.'
+title: 'Infectious edges.'
 date: 2019-02-17
 thumbnail: thumbnail.png
 dependencies:
