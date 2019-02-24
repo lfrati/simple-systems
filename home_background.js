@@ -1,12 +1,13 @@
 let flock;
 let numBoids = 20;
-let aim;
 
 let segNum = 5;
 let segLength = 5;
 
 let splatters = [];
 let serpent;
+
+let t = 0;
 
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
@@ -30,15 +31,39 @@ function setup() {
 
 function draw() {
     background(255);
-    aim = createVector(mouseX, mouseY);
-    flock.run();
-
-    serpent.chase(flock);
-    serpent.show();
 
     for (let particle of splatters) {
         particle.show();
         //particle.update();
+    }
+
+    if (flock.boids.length > 0) {
+        // Draw FPS (rounded to 2 decimal places) at the bottom left of the screen
+        // let fps = frameRate();
+        // fill(0);
+        // noStroke();
+        // textSize(15);
+        // text('FPS: ' + fps.toFixed(0), width - 100, 20);
+
+        let target = createVector(mouseX, mouseY);
+        flock.run(target);
+
+        let prey = flock.closest(serpent.position);
+        serpent.chase(prey);
+        serpent.update();
+        serpent.borders();
+        serpent.render();
+    } else {
+        let prey = createVector(width * 2, height + sin(t) * height);
+        t += 0.02;
+        serpent.chase(prey);
+        serpent.update();
+        serpent.render();
+
+        if (serpent.position.dist(prey) < 10) {
+            console.log('caught');
+            noLoop();
+        }
     }
 }
 
@@ -74,10 +99,10 @@ class Flock {
         return bestBoid;
     }
 
-    run() {
+    run(target) {
         this.next = [];
         for (let boid of this.boids) {
-            boid.run(this.boids); // Passing the entire list of boids to each boid individually
+            boid.run(this.boids, target); // Passing the entire list of boids to each boid individually
             if (boid.dead == false) {
                 this.next.push(boid);
             }
@@ -107,8 +132,8 @@ class Boid {
         this.dead = false;
     }
 
-    run(boids) {
-        this.flock(boids);
+    run(boids, target) {
+        this.flock(boids, target);
         this.update();
         this.borders();
         this.render();
@@ -120,8 +145,8 @@ class Boid {
     }
 
     // We accumulate a new acceleration each time based on three rules
-    flock(boids) {
-        let chase = this.seek(aim);
+    flock(boids, target) {
+        let chase = this.seek(target);
         let sep = this.separate(boids);
         // Arbitrarily weight these forces
         chase.mult(1.5);
@@ -248,7 +273,7 @@ class Serpent extends Boid {
         pop();
     }
 
-    show() {
+    render() {
         strokeWeight(8);
         stroke(0);
         this.dragSegment(0, this.position.x, this.position.y);
@@ -257,13 +282,10 @@ class Serpent extends Boid {
         }
     }
 
-    chase(flock) {
-        let prey = flock.closest(serpent.position);
+    chase(prey) {
         //let prey = createVector(mouseX, mouseY);
-        let aim = this.seek(prey);
-        this.applyForce(aim);
-        this.update();
-        this.borders();
+        let desire = this.seek(prey);
+        this.applyForce(desire);
     }
 
     // Wraparound
