@@ -16,6 +16,8 @@ let buffer = 70;
 let spike_train;
 let max_train = 200;
 
+let focused = true;
+
 function mousePressed() {
     for (let node of nodes) {
         let d = dist(mouseX, mouseY, node.pos.x, node.pos.y);
@@ -43,7 +45,13 @@ function mouseWheel(event) {
 }
 
 function setup() {
-    createCanvas(700, 600);
+    let cnv = createCanvas(700, 600);
+    cnv.mouseOver(() => {
+        focused = true;
+    });
+    cnv.mouseOut(() => {
+        focused = false;
+    });
 
     slider = createSlider(0, 10, 0, 1);
     slider.position(100, 5);
@@ -98,34 +106,36 @@ function setup() {
 }
 
 function draw() {
-    background(50);
+    if (focused) {
+        background(50);
 
-    // Draw FPS (rounded to 2 decimal places) at the bottom left of the screen
-    let fps = frameRate();
-    fill(255);
-    stroke(0);
-    textSize(15);
-    text('FPS: ' + fps.toFixed(0), width - 100, 20);
+        // Draw FPS (rounded to 2 decimal places) at the bottom left of the screen
+        let fps = frameRate();
+        fill(255);
+        stroke(0);
+        textSize(15);
+        text('FPS: ' + fps.toFixed(0), width - 100, 20);
 
-    textSize(20);
-    stroke(0);
-    strokeWeight(2);
-    fill(220, 220, 220);
-    inhibition = slider.value();
-    text('I : ' + inhibition, 20, 20);
-    text('impulses : ' + cur_impulses, 200, 20);
+        textSize(20);
+        stroke(0);
+        strokeWeight(2);
+        fill(220, 220, 220);
+        inhibition = slider.value();
+        text('I : ' + inhibition, 20, 20);
+        text('impulses : ' + cur_impulses, 200, 20);
 
-    fill(255);
-    stroke(255);
+        fill(255);
+        stroke(255);
 
-    for (let link of links) {
-        link.show();
-        link.update();
-    }
+        for (let link of links) {
+            link.show();
+            link.update();
+        }
 
-    for (let node of nodes) {
-        node.show();
-        node.update();
+        for (let node of nodes) {
+            node.show();
+            node.update();
+        }
     }
 
     // SPIKE TRAIN START ----------------------------

@@ -17,7 +17,10 @@ let backgroundColor;
 let impulseColor;
 let vanishingLinks = [];
 
+let clicked = false;
+
 function mousePressed() {
+    clicked = true;
     from.excite(true);
 }
 
@@ -71,6 +74,13 @@ function setup() {
 function draw() {
     background(backgroundColor);
 
+    if (clicked == false) {
+        fill(255, 30);
+        noStroke();
+        textSize(40);
+        text('CLICK ME', 50, 70);
+    }
+
     for (let outLink of links) {
         outLink.show();
         outLink.update();
@@ -113,7 +123,7 @@ class Activation {
         this.magnification = 5;
         this.threshold = 3;
         this.dampening = 0;
-        this.decay = 0.03;
+        this.decay = 0.01;
         this.out = [];
         this.max_dampening = 14;
     }
