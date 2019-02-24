@@ -10,7 +10,7 @@ dependencies:
     - plotly
 ---
 
-# Neurons
+# Infection
 
 {% raw %}
 

@@ -10,6 +10,7 @@ let ID = 0; // Used to map nodes to rows of the adjacency matrix
 let adj; // Adjacency matrix
 let node_diameter = 10; // How big should the nodes be?
 let slider;
+let focused = true;
 
 function mousePressed() {
     for (let node of nodes) {
@@ -38,11 +39,17 @@ function mouseWheel(event) {
 }
 
 function setup() {
-    createCanvas(1000, 600); // a big nice canvas
+    let cnv = createCanvas(800, 600);
+    cnv.mouseOver(() => {
+        focused = true;
+    });
+    cnv.mouseOut(() => {
+        focused = false;
+    });
 
-    slider = createSlider(0, 100, 55, 5); // range[0-100] start from 55, increments of 5
+    slider = createSlider(0, 100, 50, 1); // range[0-100] start from 55, increments of 5
     slider.position(100, 5);
-    slider.style('width', '80px');
+    slider.style('width', '100px');
 
     adj = Array(num_nodes)
         .fill(0)
@@ -73,30 +80,32 @@ function setup() {
 }
 
 function draw() {
-    background(50);
+    if (focused) {
+        background(50);
 
-    // Draw FPS (rounded to 2 decimal places) at the bottom left of the screen
-    let fps = frameRate();
-    fill(255);
-    stroke(0);
-    textSize(15);
-    text('FPS: ' + fps.toFixed(0), width - 100, 20);
+        // Draw FPS (rounded to 2 decimal places) at the bottom left of the screen
+        let fps = frameRate();
+        fill(255);
+        stroke(0);
+        textSize(15);
+        text('FPS: ' + fps.toFixed(0), width - 100, 20);
 
-    spread_prob = slider.value() / 100;
-    stroke(0);
-    strokeWeight(2);
-    fill(220, 220, 220);
-    textSize(20);
-    text('P : ' + nf(spread_prob, 1, 2), 20, 20);
-    text('Infected : ' + cur_infected, 200, 20);
+        spread_prob = slider.value() / 100;
+        stroke(0);
+        strokeWeight(2);
+        fill(220, 220, 220);
+        textSize(20);
+        text('P : ' + nf(spread_prob, 1, 2), 20, 20);
+        text('Infected : ' + cur_infected, 210, 20);
 
-    for (let link of links) {
-        link.show();
-        link.update();
-    }
+        for (let link of links) {
+            link.show();
+            link.update();
+        }
 
-    for (let node of nodes) {
-        node.show();
+        for (let node of nodes) {
+            node.show();
+        }
     }
 }
 
