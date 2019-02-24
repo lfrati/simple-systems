@@ -14,7 +14,7 @@ function setup() {
     flock = new Flock();
     // Add an initial set of boids into the system
     for (let i = 0; i < numBoids; i++) {
-        let b = new Boid(width / 2, height / 2);
+        let b = new Boid(0, 0);
         flock.addBoid(b);
     }
 }
@@ -23,11 +23,6 @@ function draw() {
     background(255);
     aim = createVector(mouseX, mouseY);
     flock.run();
-}
-
-// Add a new boid into the System
-function mouseDragged() {
-    flock.addBoid(new Boid(mouseX, mouseY));
 }
 
 // Flock object
@@ -62,7 +57,7 @@ class Boid {
         this.velocity = createVector(random(-1, 1), random(-1, 1));
         this.position = createVector(x, y);
         this.r = 3.0;
-        this.maxspeed = 3; // Maximum speed
+        this.maxspeed = 4; // Maximum speed
         this.maxforce = 0.05; // Maximum steering force
     }
 
@@ -152,7 +147,7 @@ class Boid {
         // Draw a triangle rotated in the direction of velocity
         let theta = this.velocity.heading() + radians(90);
         fill(127);
-        noStroke();
+        stroke(0);
         push();
         translate(this.position.x, this.position.y);
         rotate(theta);
