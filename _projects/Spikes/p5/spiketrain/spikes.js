@@ -3,7 +3,7 @@ let num_links = 800;
 let nodes = [];
 let links = [];
 let inhibition;
-let cur_impulses = 0;
+let cur_impulses;
 let ID = 0;
 let adj;
 let node_diameter = 10;
@@ -98,6 +98,7 @@ function ui() {
 
 function makeNodes() {
     nodes = [];
+    cur_impulses = 0;
     adj = Array(num_nodes)
         .fill()
         .map(() => Array(num_nodes).fill(0));
