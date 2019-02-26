@@ -8,15 +8,15 @@ let ID = 0;
 let adj;
 let node_diameter = 10;
 let slider;
-let rebalance_speed = 0.02;
 let spikeColor;
 let restColor;
 let buffer = 70;
 
-let spike_train;
-let max_train = 200;
-
+let locality = 200;
+let locality_slider;
 let focused = true;
+
+let reset;
 
 function mousePressed() {
     for (let node of nodes) {
@@ -44,7 +44,7 @@ function mouseWheel(event) {
     return false;
 }
 
-function setup() {
+function ui() {
     let cnv = createCanvas(700, 600);
     cnv.mouseOver(() => {
         focused = true;
@@ -56,10 +56,48 @@ function setup() {
     slider = createSlider(0, 10, 0, 1);
     slider.position(100, 5);
     slider.style('width', '80px');
+    slider.mouseOver(() => {
+        focused = true;
+    });
+    slider.mouseOut(() => {
+        focused = false;
+    });
+
+    locality_slider = createSlider(10, locality * 2, locality, 10);
+    locality_slider.position(100, 30);
+    locality_slider.style('width', '80px');
+    locality_slider.mouseOver(() => {
+        focused = true;
+    });
+    locality_slider.mouseOut(() => {
+        focused = false;
+    });
+    locality_slider.mouseMoved(() => {
+        if (mouseIsPressed) {
+            locality = locality_slider.value();
+            localWire();
+        }
+    });
+
+    reset = createButton('reset');
+    reset.position(200, 30);
+    reset.mousePressed(() => {
+        makeNodes();
+        localWire();
+    });
+    reset.mouseOver(() => {
+        focused = true;
+    });
+    reset.mouseOut(() => {
+        focused = false;
+    });
 
     spikeColor = color(255, 0, 50);
     restColor = color(0, 65, 225);
+}
 
+function makeNodes() {
+    nodes = [];
     adj = Array(num_nodes)
         .fill()
         .map(() => Array(num_nodes).fill(0));
@@ -70,6 +108,20 @@ function setup() {
         let pos = createVector(x, y);
         nodes.push(new Node(pos, ID));
         ID += 1;
+    }
+}
+function setup() {
+    ui();
+    makeNodes();
+    localWire();
+}
+
+function randomWire() {
+    links = [];
+
+    for (let node of nodes) {
+        node.out = [];
+        node.in = [];
     }
 
     for (let i = 0; i < num_links; i++) {
@@ -91,24 +143,46 @@ function setup() {
         to.in.push(link); // maybe we'll use it later
 
         // UNDIRECTED GRAPH, beware of link count
-        /*
-        adj[to.id][from.id] = 1;
-        link = new Link(to, from);
-        links.push(link);
-        from.in.push(link);
-        to.out.push(link);
-        */
+
+        //adj[to.id][from.id] = 1;
+        //link = new Link(to, from);
+        //links.push(link);
+        //from.in.push(link);
+        //to.out.push(link);
+    }
+}
+
+function localWire() {
+    links = [];
+
+    for (let node of nodes) {
+        node.out = [];
+        node.in = [];
     }
 
-    spike_train = Array(num_nodes)
-        .fill(0)
-        .map(() => Array(max_train).fill(0));
+    for (let from of nodes) {
+        from.out = [];
+        for (let to of nodes) {
+            if (to != from) {
+                let d = dist(from.pos.x, from.pos.y, to.pos.x, to.pos.y);
+                if (d < locality) {
+                    //adj[from.id][to.id] = 1;
+
+                    let link = new Link(from, to);
+                    links.push(link); // to iterate over them
+                    from.out.push(link); // to excite neighbors
+                    to.in.push(link); // maybe we'll use it later
+                }
+            }
+        }
+    }
 }
 
 function draw() {
     if (focused) {
         background(50);
-
+        //fill(255);
+        //ellipse(mouseX, mouseY, 200, 200);
         // Draw FPS (rounded to 2 decimal places) at the bottom left of the screen
         let fps = frameRate();
         fill(255);
@@ -121,7 +195,9 @@ function draw() {
         strokeWeight(2);
         fill(220, 220, 220);
         inhibition = slider.value();
+        locality = locality_slider.value();
         text('I : ' + inhibition, 20, 20);
+        text('r : ' + locality, 20, 50);
         text('impulses : ' + cur_impulses, 200, 20);
 
         fill(255);
@@ -177,6 +253,7 @@ class Node {
         this.activation = 0;
         this.threshold = 5;
         this.dampening = 0;
+        this.rebalance_speed = 0.04;
     }
     excite(force) {
         if (force) {
@@ -195,7 +272,7 @@ class Node {
         if (this.activation > this.threshold + this.dampening + inhibition) {
             this.excited = true;
             this.activation = 0;
-            this.dampening += 1;
+            this.dampening += 2;
             for (let edge of this.out) {
                 edge.excite();
                 cur_impulses += 1;
@@ -203,7 +280,7 @@ class Node {
         }
 
         if (this.activation > 0) {
-            this.activation -= rebalance_speed * 2;
+            this.activation -= this.rebalance_speed * 2;
         }
 
         if (this.activation < 0) {
@@ -211,7 +288,7 @@ class Node {
         }
 
         if (this.dampening > 0) {
-            this.dampening -= rebalance_speed / 2; // slow dampening recover to let the acitivity die out
+            this.dampening -= this.rebalance_speed / 2; // slow dampening recover to let the acitivity die out
         }
     }
 
