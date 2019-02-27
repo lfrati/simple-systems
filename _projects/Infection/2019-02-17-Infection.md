@@ -4,10 +4,6 @@ title: 'Infectious edges.'
 date: 2019-02-17
 thumbnail: thumbnail.png
 dependencies:
-    - p5.0.5
-    - p5.0.5.dom
-    - tfjs
-    - plotly
 ---
 
 # Infection

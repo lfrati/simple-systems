@@ -14,8 +14,8 @@ let buffer = 70;
 
 let locality = 200;
 let locality_slider;
-let focused = true;
-
+let focused = false;
+let first_run = true;
 let reset;
 
 function mousePressed() {
@@ -180,7 +180,8 @@ function localWire() {
 }
 
 function draw() {
-    if (focused) {
+    if (focused || first_run) {
+        first_run = false;
         background(50);
         //fill(255);
         //ellipse(mouseX, mouseY, 200, 200);
