@@ -133,6 +133,8 @@ function my_draw() {
     } else {
         t = 0;
         num_nodes = 20 + int(random(30));
+        plot_links = [];
+        plot_comps = [];
         makeNodes();
         localWire();
     }

@@ -75,6 +75,10 @@ function ui() {
     locality_slider.mouseMoved(() => {
         if (mouseIsPressed) {
             locality = locality_slider.value();
+            cur_impulses = 0;
+            for (let node of nodes) {
+                node.dampening = 0;
+            }
             localWire();
         }
     });
