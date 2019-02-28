@@ -38,6 +38,87 @@ function mouseWheel(event) {
     return false; // return false otherwise the page would scroll
 }
 
+function addNode(x, y) {
+    let pos = createVector(x, y);
+    let node = new Node(pos);
+    nodes.push(node);
+    return node;
+}
+function connect(from, to) {
+    let link = new Link(from, to);
+    links.push(link);
+    from.out.push(link); // to infect neighbors
+    to.in.push(link); // mmmh... maybe we'll use it later
+}
+
+function pattern1() {
+    let head = addNode(20, 150);
+    let halfway = addNode(170, 60);
+
+    connect(
+        head,
+        halfway
+    );
+
+    let tail = addNode(320, 150);
+    connect(
+        head,
+        tail
+    );
+    connect(
+        halfway,
+        tail
+    );
+    let readout = addNode(width - 20, 150);
+    connect(
+        tail,
+        readout
+    );
+
+    let p1 = setInterval(() => {
+        head.infect(true);
+    }, 500);
+    return p1;
+}
+
+function pattern2() {
+    let head = addNode(20, 350);
+    let halfway = addNode(170, 350);
+    connect(
+        head,
+        halfway
+    );
+    let loop1 = addNode(220, 250);
+    connect(
+        halfway,
+        loop1
+    );
+    let loop2 = addNode(120, 250);
+    connect(
+        loop1,
+        loop2
+    );
+    connect(
+        loop2,
+        halfway
+    );
+    let tail = addNode(320, 350);
+    connect(
+        halfway,
+        tail
+    );
+    let readout = addNode(width - 20, 350);
+    connect(
+        tail,
+        readout
+    );
+
+    let p2 = setInterval(() => {
+        head.infect(true);
+    }, 500);
+    return p2;
+}
+
 function setup() {
     let cnv = createCanvas(800, 600);
     cnv.mouseOver(() => {
@@ -47,7 +128,7 @@ function setup() {
         focused = false;
     });
 
-    slider = createSlider(0, 100, 50, 1); // range[0-100] start from 55, increments of 5
+    slider = createSlider(0, 100, 100, 1); // range[0-100] start from 55, increments of 5
     slider.position(100, 5);
     slider.style('width', '100px');
     slider.mouseOver(() => {
@@ -56,33 +137,17 @@ function setup() {
     slider.mouseOut(() => {
         focused = false;
     });
+    nodes = [];
+    links = [];
+    let p1 = pattern1();
+    let p2 = pattern2();
 
-    adj = Array(num_nodes)
-        .fill(0)
-        .map(() => Array(num_nodes).fill(0));
+    setTimeout(() => {
+        clearInterval(p1);
+        clearInterval(p2);
+    }, 2000);
 
-    for (let i = 0; i < num_nodes; i++) {
-        nodes.push(new Node());
-    }
-
-    for (let i = 0; i < num_links; i++) {
-        let from = random(nodes);
-        let to = random(nodes);
-        let duplicate = adj[from.id][to.id] == 1;
-
-        // avoid loops, beware of infinite loops
-        while (from == to || duplicate) {
-            to = random(nodes);
-            duplicate = adj[from.id][to.id] == 1;
-        }
-
-        adj[from.id][to.id] = 1;
-
-        let link = new Link(from, to);
-        links.push(link); // to iterate over links when drawing
-        from.out.push(link); // to infect neighbors
-        to.in.push(link); // mmmh... maybe we'll use it later
-    }
+    setTimeout(setup, 10000);
 }
 
 function draw() {
@@ -116,10 +181,8 @@ function draw() {
 }
 
 class Node {
-    constructor() {
-        let x = buffer + random(width - buffer * 2);
-        let y = buffer + random(height - buffer * 2);
-        this.pos = createVector(x, y);
+    constructor(pos) {
+        this.pos = pos;
         this.id = ID;
         ID += 1;
         this.out = [];
