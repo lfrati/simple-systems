@@ -1,5 +1,4 @@
-let num_nodes = 200;
-let num_links = 800;
+let num_nodes = 50;
 let nodes = [];
 let links = [];
 let readIn = [];
@@ -12,6 +11,10 @@ let buffer = 70;
 let node_diameter = 10;
 let locality = 200;
 let ID = 0;
+let waves = [];
+for (let i = 0; i < readNodes; i++) {
+    waves[i] = [];
+}
 
 let inhibition;
 let cur_impulses;
@@ -25,6 +28,7 @@ let first_run = true;
 let reset;
 let fire;
 let seed;
+let plot;
 
 let trigger = 0;
 let rate = 5;
@@ -38,14 +42,13 @@ function setup() {
 }
 
 function ui() {
-    let cnv = createCanvas(700, 600);
+    let cnv = createCanvas(800, 700);
     cnv.mouseOver(() => {
         focused = true;
     });
     cnv.mouseOut(() => {
         focused = false;
     });
-
     cnv.mousePressed(() => {
         for (let pin of readIn) {
             let d = dist(mouseX, mouseY, pin.pos.x, pin.pos.y);
@@ -102,7 +105,7 @@ function ui() {
     restColor = color(0, 65, 225);
 
     for (let i = 0; i < readNodes; i++) {
-        let x_in = 15;
+        let x_in = 35;
         let y_in = height / 2 + (i - readNodes / 2) * readSpacing;
         let x_out = width - 35;
         let y_out = height / 2 + (i - readNodes / 2) * readSpacing;
@@ -113,13 +116,12 @@ function ui() {
         let nodeOut = new Node(posOut, 0);
         let nodeIn = new Pin(posIn, nodeOut);
         nodeOut.pair = nodeIn;
-        nodeOut.restColor = color(80, 200, 80);
-
+        nodeOut.restColor = nodeOut.color = color(80, 200, 80);
         readIn.push(nodeIn);
         readOut.push(nodeOut);
     }
     fire = createButton('FIRE');
-    fire.position(2, height / 2 + (readSpacing * readNodes) / 2);
+    fire.position(2, height / 2 + (readSpacing * readNodes) / 3 + 15);
     fire.mousePressed(() => {
         for (let pin of readIn) {
             pin.excite();
@@ -131,6 +133,9 @@ function ui() {
     fire.mouseOut(() => {
         focused = false;
     });
+
+    plot = createGraphics(width, height / 3);
+    plot.clear();
 }
 
 function makeNodes() {
@@ -139,10 +144,11 @@ function makeNodes() {
     adj = Array(num_nodes)
         .fill()
         .map(() => Array(num_nodes).fill(0));
+    ID = 0;
 
     for (let i = 0; i < num_nodes; i++) {
-        let x = buffer + random(width - buffer * 2);
-        let y = buffer + random(height - buffer * 2);
+        let x = map(random(), 0, 1, 80, width - 80);
+        let y = map(random(), 0, 1, 80, height - 200);
         let pos = createVector(x, y);
         nodes.push(new Node(pos, ID));
         ID += 1;
@@ -174,14 +180,6 @@ function randomWire() {
         links.push(link); // to iterate over them
         from.out.push(link); // to excite neighbors
         to.in.push(link); // maybe we'll use it later
-
-        // UNDIRECTED GRAPH, beware of link count
-
-        //adj[to.id][from.id] = 1;
-        //link = new Link(to, from);
-        //links.push(link);
-        //from.in.push(link);
-        //to.out.push(link);
     }
 }
 
@@ -198,13 +196,12 @@ function localWire() {
         for (let to of nodes) {
             if (to != from) {
                 let d = dist(from.pos.x, from.pos.y, to.pos.x, to.pos.y);
-                if (d < locality) {
-                    //adj[from.id][to.id] = 1;
-
+                if (d < locality && adj[to.id][from.id] != 1) {
                     let link = new Link(from, to);
                     links.push(link); // to iterate over them
                     from.out.push(link); // to excite neighbors
                     to.in.push(link); // maybe we'll use it later
+                    // adj[from.id][to.id] = 1; // uncomment to make the graph directed
                 }
             }
         }
@@ -307,35 +304,28 @@ function draw() {
             node.show();
             node.update();
         }
+
+        plotActivity();
+        image(plot, 0, height - 150);
     }
+}
 
-    // SPIKE TRAIN START ----------------------------
-    /*fill(255);
-
-    for (let node of nodes) {
-        if (node.excited) {
-            spike_train[node.id].unshift(1);
-            spike_train[node.id].pop();
-        } else {
-            spike_train[node.id].unshift(0);
-            spike_train[node.id].pop();
+function plotActivity() {
+    plot.clear();
+    for (let i in readOut) {
+        let subject = readOut[i];
+        waves[i].unshift(subject.activation / (subject.threshold + subject.dampening + inhibition));
+        plot.beginShape();
+        plot.noFill();
+        plot.stroke(subject.color);
+        for (let j in waves[i]) {
+            plot.vertex(j, waves[i][j] * 25 + 30 * i);
         }
-        node.excited = false;
+        if (waves[i].length > width) {
+            waves[i].pop();
+        }
+        plot.endShape();
     }
-
-    for (let node in nodes) {
-        let spacing = 4; // 10
-        stroke(255, 50);
-        strokeWeight(1);
-        line(20, height - 300 + node * spacing, 20 + max_train * 4, height - 300 + node * spacing);
-
-        for (let t in spike_train[node]) {
-            if (spike_train[node][t] == 1) {
-                ellipse(20 + t * 4, height - 300 + node * spacing, spacing, spacing);
-            }
-        }
-    }*/
-    // SPIKE TRAIN END ----------------------------
 }
 
 class Pin {
@@ -381,6 +371,7 @@ class Node {
         this.rebalance_speed = 0.04;
         this.restColor = restColor;
         this.spikeColor = spikeColor;
+        this.color = restColor;
     }
     excite(force) {
         if (force) {
@@ -391,7 +382,7 @@ class Node {
             }
         } else {
             // normal excite from another neuron
-            this.activation += 0.5;
+            this.activation += 1;
         }
     }
 
@@ -405,9 +396,14 @@ class Node {
                 cur_impulses += 1;
             }
         }
+        this.color = lerpColor(
+            this.restColor,
+            this.spikeColor,
+            this.activation / (this.threshold + this.dampening + inhibition)
+        );
 
         if (this.activation > 0) {
-            this.activation -= this.rebalance_speed / 40;
+            this.activation -= this.rebalance_speed / 5;
         }
 
         if (this.activation < 0) {
@@ -424,16 +420,10 @@ class Node {
         strokeWeight(1);
 
         let size = node_diameter + this.activation;
-        if (size >= 0) {
-            fill(
-                lerpColor(
-                    this.restColor,
-                    this.spikeColor,
-                    this.activation / (this.threshold + this.dampening + inhibition)
-                )
-            );
-            ellipse(this.pos.x, this.pos.y, size, size);
-        }
+
+        fill(this.color);
+        ellipse(this.pos.x, this.pos.y, size, size);
+
         noFill();
         stroke(255, 50);
         ellipse(
@@ -441,6 +431,36 @@ class Node {
             this.pos.y,
             node_diameter + (this.threshold + this.dampening + inhibition),
             node_diameter + (this.threshold + this.dampening + inhibition)
+        );
+    }
+}
+
+class readNode extends Node {
+    constructor(pos) {
+        super(pos, -1);
+        this.rebalance_speed = 0;
+    }
+    update() {
+        if (this.activation > this.threshold) {
+            this.activation = 0;
+        }
+    }
+    show() {
+        stroke(50);
+        strokeWeight(1);
+
+        let size = node_diameter + this.activation;
+        if (size >= 0) {
+            fill(lerpColor(this.restColor, this.spikeColor, this.activation / this.threshold));
+            ellipse(this.pos.x, this.pos.y, size, size);
+        }
+        noFill();
+        stroke(255, 50);
+        ellipse(
+            this.pos.x,
+            this.pos.y,
+            node_diameter + this.threshold * 2,
+            node_diameter + this.threshold * 2
         );
     }
 }
@@ -470,7 +490,7 @@ class Link {
         /*
         for (let impulse of this.impulses) {
             let tmp = p5.Vector.lerp(this.from.pos, this.to.pos, impulse / this.length);
-            noStroke();
+            strokeWeight(1);
             stroke(255, 50, 50);
             ellipse(tmp.x, tmp.y, 5, 5);
         }
@@ -492,4 +512,12 @@ class Link {
         }
         this.impulses = new_travelers;
     }
+}
+
+function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
 }
