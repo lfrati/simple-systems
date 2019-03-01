@@ -302,7 +302,7 @@ class Node {
         stroke(50);
         strokeWeight(1);
 
-        let size = node_diameter + this.activation * 4;
+        let size = node_diameter + this.activation * 2;
         if (size >= 0) {
             fill(
                 lerpColor(
@@ -318,8 +318,8 @@ class Node {
         ellipse(
             this.pos.x,
             this.pos.y,
-            node_diameter + (this.threshold + this.dampening + inhibition) * 4,
-            node_diameter + (this.threshold + this.dampening + inhibition) * 4
+            node_diameter + (this.threshold + this.dampening + inhibition) * 2,
+            node_diameter + (this.threshold + this.dampening + inhibition) * 2
         );
     }
 }
