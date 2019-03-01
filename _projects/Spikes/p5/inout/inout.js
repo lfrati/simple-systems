@@ -29,6 +29,7 @@ let reset;
 let fire;
 let seed;
 let plot;
+let trainSize = 35;
 
 let trigger = 0;
 let rate = 5;
@@ -113,7 +114,7 @@ function ui() {
         let posIn = createVector(x_in, y_in);
         let posOut = createVector(x_out, y_out);
 
-        let nodeOut = new Node(posOut, 0);
+        let nodeOut = new ReadNode(posOut, 0);
         let nodeIn = new Pin(posIn, nodeOut);
         nodeOut.pair = nodeIn;
         nodeOut.restColor = nodeOut.color = color(80, 200, 80);
@@ -121,7 +122,8 @@ function ui() {
         readOut.push(nodeOut);
     }
     fire = createButton('FIRE');
-    fire.position(2, height / 2 + (readSpacing * readNodes) / 3 + 15);
+    fire.position(20, height / 2 + (readSpacing * readNodes) / 3 + 15);
+    fire.style('color', 'red');
     fire.mousePressed(() => {
         for (let pin of readIn) {
             pin.excite();
@@ -134,7 +136,7 @@ function ui() {
         focused = false;
     });
 
-    plot = createGraphics(width, height / 3);
+    plot = createGraphics(width, trainSize * readNodes + 2);
     plot.clear();
 }
 
@@ -152,6 +154,9 @@ function makeNodes() {
         let pos = createVector(x, y);
         nodes.push(new Node(pos, ID));
         ID += 1;
+    }
+    for (let node of readOut) {
+        node.activation = 0;
     }
 }
 
@@ -306,25 +311,34 @@ function draw() {
         }
 
         plotActivity();
-        image(plot, 0, height - 150);
+        image(plot, 0, height - 180);
     }
 }
 
 function plotActivity() {
-    plot.clear();
+    plot.background(20);
     for (let i in readOut) {
+        i = int(i);
         let subject = readOut[i];
         waves[i].unshift(subject.activation / (subject.threshold + subject.dampening + inhibition));
-        plot.beginShape();
+
+        // axis
+        plot.stroke(255, 50);
+        plot.strokeWeight(0.5);
+        plot.line(0, trainSize * (i + 1), width, trainSize * (i + 1));
+
+        // activity
         plot.noFill();
         plot.stroke(subject.color);
+        plot.beginShape();
         for (let j in waves[i]) {
-            plot.vertex(j, waves[i][j] * 25 + 30 * i);
+            plot.vertex(plot.width - j, trainSize * (i + 1) - waves[i][j] * (trainSize - 5));
         }
+        plot.endShape();
+
         if (waves[i].length > width) {
             waves[i].pop();
         }
-        plot.endShape();
     }
 }
 
@@ -403,7 +417,7 @@ class Node {
         );
 
         if (this.activation > 0) {
-            this.activation -= this.rebalance_speed / 5;
+            this.activation -= this.rebalance_speed;
         }
 
         if (this.activation < 0) {
@@ -435,15 +449,24 @@ class Node {
     }
 }
 
-class readNode extends Node {
+class ReadNode extends Node {
     constructor(pos) {
         super(pos, -1);
-        this.rebalance_speed = 0;
     }
     update() {
         if (this.activation > this.threshold) {
             this.activation = 0;
         }
+
+        if (this.activation > 0) {
+            this.activation -= this.rebalance_speed;
+        }
+
+        if (this.activation < 0) {
+            this.activation = 0;
+        }
+
+        this.color = lerpColor(this.restColor, this.spikeColor, this.activation / this.threshold);
     }
     show() {
         stroke(50);
@@ -454,14 +477,6 @@ class readNode extends Node {
             fill(lerpColor(this.restColor, this.spikeColor, this.activation / this.threshold));
             ellipse(this.pos.x, this.pos.y, size, size);
         }
-        noFill();
-        stroke(255, 50);
-        ellipse(
-            this.pos.x,
-            this.pos.y,
-            node_diameter + this.threshold * 2,
-            node_diameter + this.threshold * 2
-        );
     }
 }
 
