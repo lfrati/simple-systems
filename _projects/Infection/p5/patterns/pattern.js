@@ -137,8 +137,14 @@ function setup() {
     slider.mouseOut(() => {
         focused = false;
     });
+    makePatterns();
+}
+
+function makePatterns() {
     nodes = [];
     links = [];
+    cur_infected = 0;
+
     let p1 = pattern1();
     let p2 = pattern2();
 
@@ -147,7 +153,7 @@ function setup() {
         clearInterval(p2);
     }, 2000);
 
-    setTimeout(setup, 10000);
+    setTimeout(makePatterns, 10000);
 }
 
 function draw() {
