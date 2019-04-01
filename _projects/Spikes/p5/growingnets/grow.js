@@ -1,4 +1,5 @@
-let num_nodes = 50;
+let num_nodes = 30;
+let max_links = num_nodes * (num_nodes - 1);
 let nodes = [];
 let links = [];
 let inhibition;
@@ -19,27 +20,27 @@ let plots;
 let plot_links = [];
 let plot_comps = [];
 let components;
-let first_run = true;
-let handler;
 
 function ui() {
     let cnv = createCanvas(400, 600);
+
+    cnv.mousePressed(() => {
+        makeNodes();
+        localWire();
+    });
 
     spikeColor = color(255, 0, 50);
     restColor = color(0, 65, 225);
     plots = createGraphics(width, height);
     plots.clear();
-
-    handler = new Handler(my_draw);
-    handler.register(cnv);
 }
 
 function makeNodes() {
+    t = 0;
+    plot_links = [];
+    plot_comps = [];
     nodes = [];
-    cur_impulses = 0;
-    adj = Array(num_nodes)
-        .fill()
-        .map(() => Array(num_nodes).fill(0));
+    ID = 0;
 
     for (let i = 0; i < num_nodes; i++) {
         let x = buffer + random(width - buffer * 2);
@@ -55,34 +56,6 @@ function setup() {
     localWire();
 }
 
-function randomWire() {
-    links = [];
-
-    for (let node of nodes) {
-        node.out = [];
-        node.in = [];
-    }
-
-    for (let i = 0; i < num_links; i++) {
-        let from = random(nodes);
-        let to = random(nodes);
-        let duplicate = adj[from.id][to.id] == 1;
-
-        // avoid loops
-        while (from == to || duplicate) {
-            to = random(nodes);
-            duplicate = adj[from.id][to.id] == 1;
-        }
-
-        adj[from.id][to.id] = 1;
-
-        let link = new Link(from, to);
-        links.push(link); // to iterate over them
-        from.out.push(link); // to excite neighbors
-        to.in.push(link); // maybe we'll use it later
-    }
-}
-
 function localWire() {
     links = [];
 
@@ -96,8 +69,6 @@ function localWire() {
             if (to != from) {
                 let d = dist(from.pos.x, from.pos.y, to.pos.x, to.pos.y);
                 if (d < locality) {
-                    //adj[from.id][to.id] = 1;
-
                     let link = new Link(from, to);
                     links.push(link); // to iterate over them
                     from.out.push(link); // to excite neighbors
@@ -107,11 +78,8 @@ function localWire() {
         }
     }
 }
-function draw() {
-    handler.run();
-}
 
-function my_draw() {
+function draw() {
     background(50);
 
     for (let link of links) {
@@ -126,83 +94,77 @@ function my_draw() {
         ellipse(node.pos.x, node.pos.y, locality * 2);
     }
 
-    if (t < PI) {
-        locality = sin(t) * width;
+    if (t < 1) {
+        locality = t * width;
         t += dt;
         localWire();
+
+        components = [];
+        for (let node of nodes) {
+            if (node.visited == false) {
+                components.push(node.id);
+                visit(node);
+            }
+        }
+
+        let progress = map(locality, 0, width, 0, 1);
+        // progress line
+        stroke(200);
+        line(progress * width, height - 10, progress * width - 1, height - 110);
+
+        let comps = (components.length / num_nodes) * 100;
+        let linkage = (links.length / max_links) * 100;
+        plot_links.push({ x: width * progress - 1, y: height - 10 - comps });
+        plot_comps.push({ x: width * progress - 1, y: height - 10 - linkage });
+
+        // top,mid,bot lines
+        stroke(255, 50);
+        line(0, height - 10, width, height - 10);
+        line(0, height - 60, width, height - 60);
+        line(0, height - 110, width, height - 110);
+
+        fill(120);
+        textSize(15);
+        noStroke();
+        text('          Nodes: ' + str(num_nodes), 10, height - 160);
+
+        noStroke();
+        fill(31, 106, 226);
+        textSize(15);
+        text('Components: ' + components.length + ' / ' + str(num_nodes), 10, height - 120);
+
+        strokeWeight(2);
+        stroke(31, 106, 226);
+        noFill();
+        beginShape();
+        plot_links.forEach(point => {
+            vertex(point.x, point.y);
+        });
+        endShape();
+
+        fill(15, 198, 25);
+        noStroke();
+        textSize(15);
+        text(
+            '            Links: ' + links.length + ' / ' + str(num_nodes * (num_nodes - 1)),
+            10,
+            height - 140
+        );
+
+        strokeWeight(2);
+        stroke(15, 198, 25);
+        noFill();
+        beginShape();
+        plot_comps.forEach(point => {
+            vertex(point.x, point.y);
+        });
+        endShape();
+
+        image(plots, 0, 0);
     } else {
-        t = 0;
-        num_nodes = 20 + int(random(30));
-        plot_links = [];
-        plot_comps = [];
         makeNodes();
         localWire();
     }
-    components = [];
-    for (let node of nodes) {
-        if (node.visited == false) {
-            components.push(node.id);
-            visit(node);
-        }
-    }
-
-    //text(locality, 10, 30);
-
-    let alpha = map(locality, 0, width, 0, 1);
-    line(0, height - 10, width, height - 10);
-    line(0, height - 60, width, height - 60);
-    line(0, height - 110, width, height - 110);
-    stroke(200);
-    line(alpha * width, height - 10, alpha * width - 1, height - 110);
-
-    if (plot_links.length < PI / dt) {
-        let comps = (components.length / num_nodes) * 100;
-        plot_links.push({ x: width * alpha - 1, y: height - 10 - comps });
-    }
-
-    if (plot_comps.length < PI / dt) {
-        let linkage = (links.length / (num_nodes * (num_nodes - 1))) * 100;
-        plot_comps.push({ x: width * alpha - 1, y: height - 10 - linkage });
-    }
-
-    fill(120);
-    textSize(15);
-    noStroke();
-    text('          Nodes: ' + str(num_nodes), 10, height - 160);
-
-    noStroke();
-    fill(31, 106, 226);
-    textSize(15);
-    text('Components: ' + components.length + ' / ' + str(num_nodes), 10, height - 120);
-
-    strokeWeight(2);
-    stroke(31, 106, 226);
-    noFill();
-    beginShape();
-    plot_links.forEach(point => {
-        vertex(point.x, point.y);
-    });
-    endShape();
-
-    fill(15, 198, 25);
-    noStroke();
-    textSize(15);
-    text(
-        '            Links: ' + links.length + ' / ' + str(num_nodes * (num_nodes - 1)),
-        10,
-        height - 140
-    );
-
-    strokeWeight(2);
-    stroke(15, 198, 25);
-    noFill();
-    beginShape();
-    plot_comps.forEach(point => {
-        vertex(point.x, point.y);
-    });
-    endShape();
-
-    image(plots, 0, 0);
 }
 
 function visit(node) {
@@ -260,44 +222,5 @@ class Link {
             ellipse(tmp.x, tmp.y, 5, 5);
         }
         */
-    }
-}
-
-class Handler {
-    constructor(draw) {
-        this.running = false;
-        this.first_run = true;
-        this.draw = draw;
-        this.paused = false;
-    }
-
-    register(obj) {
-        obj.mouseOver(() => {
-            loop();
-        });
-        obj.mouseOut(() => {
-            this.paused = false;
-            noLoop();
-        });
-    }
-
-    run() {
-        this.draw();
-
-        if (this.first_run) {
-            noLoop();
-            this.first_run = false;
-        }
-
-        if (this.paused == false) {
-            background(255, 10);
-            fill(255);
-            stroke(0);
-            strokeWeight(1);
-            rectMode(CENTER);
-            rect(width / 2 - 15, height / 2, 20, 60);
-            rect(width / 2 + 15, height / 2, 20, 60);
-            this.paused = true;
-        }
     }
 }
