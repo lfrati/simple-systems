@@ -1,326 +1,116 @@
-let flock;
-let numBoids = 20;
+let nodes = [];
+let quad;
+let capacity = 5;
+let connDist = 200;
+let mouseConnDist = connDist;
+let ID = 0;
+let Adj;
+let buffer = connDist / 2;
 
-let segNum = 5;
-let segLength = 5;
+function populate() {
+    let boundary = new Rectangle(width / 2, height / 2, width / 2, height / 2);
+    quad = new QuadTree(boundary, capacity);
 
-let splatters = [];
-let serpent;
+    nodes = [];
+    let num_nodes = (3 * width * height) / (connDist * connDist);
+    //console.log(width, height, num_nodes);
+    for (let i = 0; i < num_nodes; i++) {
+        let node = new Node(ID);
+        ID += 1;
+        nodes.push(node);
+        let point = new Point(node.pos.x, node.pos.y, node);
+        quad.insert(point);
+    }
 
-let t = 0;
-
-function windowResized() {
-    resizeCanvas(windowWidth, windowHeight);
+    Adj = Array(ID)
+        .fill()
+        .map(() => Array(ID).fill(0));
 }
 
 function setup() {
-    let canvas = createCanvas(windowWidth, windowHeight);
-    canvas.position(0, 0);
-    canvas.style('z-index', -1);
+    let canvas = createCanvas(windowWidth + buffer, windowHeight + buffer);
 
-    flock = new Flock();
-    // Add an initial set of boids into the system
-    for (let i = 0; i < numBoids; i++) {
-        let b = new Boid(width / 2, height / 2);
-        flock.addBoid(b);
+    canvas.style('left: ' + -buffer / 2 + 'px; top: ' + -buffer / 2 + 'px;');
+    canvas.addClass('background');
+
+    populate();
+}
+
+function connectMouse() {
+    let pos = createVector(mouseX, mouseY);
+    let range = new Circle(pos.x, pos.y, mouseConnDist);
+    let points = quad.query(range);
+
+    if (points.length > 3) {
+        for (let point of points) {
+            let other = point.data;
+            let d = pos.dist(other.pos);
+            let alpha = (mouseConnDist - d) / mouseConnDist;
+            if (other != this) {
+                stroke(0, 100 * alpha);
+                line(pos.x, pos.y, other.pos.x, other.pos.y);
+            }
+        }
     }
-
-    startPos = createVector(0, 0);
-    serpent = new Serpent();
 }
 
 function draw() {
     background(255);
-
-    for (let particle of splatters) {
-        particle.show();
-        //particle.update();
+    for (let node of nodes) {
+        node.show(nodes);
     }
-
-    if (flock.boids.length > 0) {
-        // Draw FPS (rounded to 2 decimal places) at the bottom left of the screen
-        // let fps = frameRate();
-        // fill(0);
-        // noStroke();
-        // textSize(15);
-        // text('FPS: ' + fps.toFixed(0), width - 100, 20);
-
-        let target = createVector(mouseX, mouseY);
-        flock.run(target);
-
-        let prey = flock.closest(serpent.position);
-        serpent.chase(prey);
-        serpent.update();
-        serpent.borders();
-        serpent.render();
-    } else {
-        let prey = createVector(width * 2, height + sin(t) * height);
-        t += 0.02;
-        serpent.chase(prey);
-        serpent.update();
-        serpent.render();
-
-        if (serpent.position.dist(prey) < 10) {
-            console.log('caught');
-            noLoop();
-        }
+    connectMouse();
+    //quad.displayQuads()
+    quad.clear();
+    Adj = Array(ID)
+        .fill()
+        .map(() => Array(ID).fill(0));
+    for (let node of nodes) {
+        node.update();
+        let point = new Point(node.pos.x, node.pos.y, node);
+        quad.insert(point);
     }
 }
 
-// Flock object
-// Does very little, simply manages the array of all the boids
+Number.prototype.mod = function(n) {
+    return ((this % n) + n) % n;
+};
 
-class Flock {
-    constructor() {
-        // An array for all the boids
-        this.boids = []; // Initialize the array
+class Node {
+    constructor(ID) {
+        this.id = ID;
+        this.pos = createVector(random() * width, random() * height);
+        this.speed = p5.Vector.random2D();
+        this.speed.setMag(0.5 + random(0.5));
     }
 
-    closest(pos) {
-        let bestBoid = createVector(mouseX, mouseY);
-        let bestDist = pos.dist(bestBoid);
-
-        for (let boid of this.boids) {
-            let d = pos.dist(boid.position);
-            if (d < bestDist) {
-                bestDist = d;
-                bestBoid = boid.position;
-            }
-            if (d < 10) {
-                boid.dead = true;
-                serpent.x.push(0);
-                serpent.y.push(0);
-                splatters.push(new Splatter(boid.position.x, boid.position.y));
-            }
-        }
-        strokeWeight(1);
-        stroke(0, 50);
-        line(pos.x, pos.y, bestBoid.x, bestBoid.y);
-        return bestBoid;
-    }
-
-    run(target) {
-        this.next = [];
-        for (let boid of this.boids) {
-            boid.run(this.boids, target); // Passing the entire list of boids to each boid individually
-            if (boid.dead == false) {
-                this.next.push(boid);
-            }
-        }
-        this.boids = this.next;
-    }
-    addBoid(b) {
-        this.boids.push(b);
-    }
-}
-
-// The Nature of Code
-// Daniel Shiffman
-// http://natureofcode.com
-
-// Boid class
-// Methods for Separation, Cohesion, Alignment added
-
-class Boid {
-    constructor(x, y) {
-        this.acceleration = createVector(0, 0);
-        this.velocity = createVector(random(-1, 1), random(-1, 1));
-        this.position = createVector(x, y);
-        this.r = 3.0;
-        this.maxspeed = 4; // Maximum speed
-        this.maxforce = 0.05; // Maximum steering force
-        this.dead = false;
-    }
-
-    run(boids, target) {
-        this.flock(boids, target);
-        this.update();
-        this.borders();
-        this.render();
-    }
-
-    applyForce(force) {
-        // We could add mass here if we want A = F / M
-        this.acceleration.add(force);
-    }
-
-    // We accumulate a new acceleration each time based on three rules
-    flock(boids, target) {
-        let chase = this.seek(target);
-        let sep = this.separate(boids);
-        // Arbitrarily weight these forces
-        chase.mult(1.5);
-        sep.mult(1.0);
-        // Add the force vectors to acceleration
-        this.applyForce(chase);
-        this.applyForce(sep);
-    }
-
-    // Separation
-    // Method checks for nearby boids and steers away
-    separate(boids) {
-        let desiredseparation = 25.0;
-        let steer = createVector(0, 0);
-        let count = 0;
-        // For every boid in the system, check if it's too close
-        for (let i = 0; i < boids.length; i++) {
-            let d = p5.Vector.dist(this.position, boids[i].position);
-            // If the distance is greater than 0 and less than an arbitrary amount (0 when you are yourself)
-            if (d > 0 && d < desiredseparation) {
-                // Calculate vector pointing away from neighbor
-                let diff = p5.Vector.sub(this.position, boids[i].position);
-                diff.normalize();
-                diff.div(d); // Weight by distance
-                steer.add(diff);
-                count++; // Keep track of how many
-            }
-        }
-        // Average -- divide by how many
-        if (count > 0) {
-            steer.div(count);
-        }
-
-        // As long as the vector is greater than 0
-        if (steer.mag() > 0) {
-            // Implement Reynolds: Steering = Desired - Velocity
-            steer.normalize();
-            steer.mult(this.maxspeed);
-            steer.sub(this.velocity);
-            steer.limit(this.maxforce);
-        }
-        return steer;
-    }
-
-    // Method to update location
-    update() {
-        // Update velocity
-        this.velocity.add(this.acceleration);
-        // Limit speed
-        this.velocity.limit(this.maxspeed);
-        this.position.add(this.velocity);
-        // Reset accelertion to 0 each cycle
-        this.acceleration.mult(0);
-    }
-
-    // A method that calculates and applies a steering force towards a target
-    // STEER = DESIRED MINUS VELOCITY
-    seek(target) {
-        let desired = p5.Vector.sub(target, this.position); // A vector pointing from the location to the target
-        // Normalize desired and scale to maximum speed
-        desired.normalize();
-        desired.mult(this.maxspeed);
-        // Steering = Desired minus Velocity
-        let steer = p5.Vector.sub(desired, this.velocity);
-        steer.limit(this.maxforce); // Limit to maximum steering force
-        return steer;
-    }
-
-    render() {
-        // Draw a triangle rotated in the direction of velocity
-        let theta = this.velocity.heading() + radians(90);
-        fill(127);
-        stroke(0);
-        strokeWeight(1);
-        push();
-        translate(this.position.x, this.position.y);
-        rotate(theta);
-        beginShape();
-        vertex(0, -this.r * 2);
-        vertex(-this.r, this.r * 2);
-        vertex(this.r, this.r * 2);
-        endShape(CLOSE);
-        pop();
-    }
-
-    // Wraparound
-    borders() {
-        if (this.position.x < -this.r) this.position.x = width + this.r;
-        if (this.position.y < -this.r) this.position.y = height + this.r;
-        if (this.position.x > width + this.r) this.position.x = -this.r;
-        if (this.position.y > height + this.r) this.position.y = -this.r;
-    }
-}
-
-class Serpent extends Boid {
-    constructor() {
-        super();
-        // this.acceleration = createVector(0, 0);
-        // this.velocity = createVector(random(-1, 1), random(-1, 1));
-        // this.position = createVector(x, y);
-        // this.r = 3.0;
-        // this.maxspeed = 4; // Maximum speed
-        // this.maxforce = 0.05; // Maximum steering force
-        this.maxspeed = 2;
-        this.maxforce = 0.1;
-        this.x = new Array(segNum).fill(0);
-        this.y = new Array(segNum).fill(0);
-    }
-
-    dragSegment(i, xin, yin) {
-        var dx = xin - this.x[i];
-        var dy = yin - this.y[i];
-        var angle = atan2(dy, dx);
-        this.x[i] = xin - cos(angle) * segLength;
-        this.y[i] = yin - sin(angle) * segLength;
-        this.segment(this.x[i], this.y[i], angle);
-    }
-
-    segment(x, y, a) {
-        push();
-        translate(x, y);
-        rotate(a);
-        line(0, 0, segLength, 0);
-        pop();
-    }
-
-    render() {
-        strokeWeight(8);
-        stroke(0);
-        this.dragSegment(0, this.position.x, this.position.y);
-        for (var i = 0; i < this.x.length - 1; i++) {
-            this.dragSegment(i + 1, this.x[i], this.y[i]);
-        }
-    }
-
-    chase(prey) {
-        //let prey = createVector(mouseX, mouseY);
-        let desire = this.seek(prey);
-        this.applyForce(desire);
-    }
-
-    // Wraparound
-    borders() {
-        if (this.position.x < 0) this.position.x = 0;
-        if (this.position.y < 0) this.position.y = 0;
-        if (this.position.x > width) this.position.x = width;
-        if (this.position.y > height) this.position.y = height;
-    }
-}
-
-class Splatter {
-    constructor(x, y) {
-        this.life = 1;
-        this.decay = 0.01;
-        this.x = x;
-        this.y = y;
-        this.particles = [];
-        for (let i = 0; i < 5; i++) {
-            let particle = createVector(x + random(10), y + random(10));
-            this.particles.push([particle, random(5)]);
-        }
-    }
-    update() {
-        if (this.life > 0) {
-            this.life -= this.decay;
-        }
-    }
     show() {
-        for (let splatter of this.particles) {
-            let particle = splatter[0];
-            let size = splatter[1];
-            noStroke();
-            fill(255, 0, 0, 100 * this.life);
-            ellipse(particle.x, particle.y, size, size);
+        noStroke();
+        fill(220);
+        ellipse(this.pos.x, this.pos.y, 2);
+        strokeWeight(1.5);
+
+        let range = new Circle(this.pos.x, this.pos.y, connDist);
+        let points = quad.query(range);
+
+        if (points.length > 3) {
+            for (let point of points) {
+                let other = point.data;
+                if (Adj[this.id][other.id] == 0) {
+                    let d = this.pos.dist(other.pos);
+                    let alpha = (connDist - d) / connDist;
+                    if (other != this) {
+                        Adj[this.id][other.id] = Adj[other.id][this.id] = 1;
+                        stroke(0, 100 * alpha);
+                        line(this.pos.x, this.pos.y, other.pos.x, other.pos.y);
+                    }
+                }
+            }
         }
+    }
+
+    update() {
+        this.pos.x = (this.pos.x + this.speed.x).mod(width);
+        this.pos.y = (this.pos.y + this.speed.y).mod(height);
     }
 }
