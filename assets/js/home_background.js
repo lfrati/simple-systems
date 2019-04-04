@@ -12,7 +12,7 @@ function populate() {
     quad = new QuadTree(boundary, capacity);
 
     nodes = [];
-    let num_nodes = (3 * width * height) / (connDist * connDist);
+    let num_nodes = (4 * width * height) / (connDist * connDist);
     //console.log(width, height, num_nodes);
     for (let i = 0; i < num_nodes; i++) {
         let node = new Node(ID);
@@ -32,6 +32,9 @@ function setup() {
 
     canvas.style('left: ' + -buffer / 2 + 'px; top: ' + -buffer / 2 + 'px;');
     canvas.addClass('background');
+
+    frameRate(30);
+    strokeCap(SQUARE);
 
     populate();
 }
@@ -81,14 +84,12 @@ class Node {
         this.id = ID;
         this.pos = createVector(random() * width, random() * height);
         this.speed = p5.Vector.random2D();
-        this.speed.setMag(0.5 + random(0.5));
+        this.speed.setMag(0.2 + random(0.4));
     }
 
     show() {
         noStroke();
-        fill(220);
-        ellipse(this.pos.x, this.pos.y, 2);
-        strokeWeight(1.5);
+        strokeWeight(1);
 
         let range = new Circle(this.pos.x, this.pos.y, connDist);
         let points = quad.query(range);
@@ -101,7 +102,7 @@ class Node {
                     let alpha = (connDist - d) / connDist;
                     if (other != this) {
                         Adj[this.id][other.id] = Adj[other.id][this.id] = 1;
-                        stroke(0, 100 * alpha);
+                        stroke(0, 100 * sin(alpha * HALF_PI));
                         line(this.pos.x, this.pos.y, other.pos.x, other.pos.y);
                     }
                 }
