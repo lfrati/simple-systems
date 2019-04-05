@@ -43,23 +43,25 @@ let selecting_year = false;
 let mapReady = false;
 
 function preload() {
-    //my table is comma separated value "csv"
-    //and has a header specifying the columns labels
-    //meteorites = loadTable('Meteorite_Landings.csv', 'csv', 'header');
+    
     data = loadJSON('countries.json');
     countries2coord = loadJSON('countries2coord.json');
     monthly_flow = loadJSON('monthly_flow.json');
     //the file can be remote
     //table = loadTable("http://p5js.org/reference/assets/mammals.csv",
     //                  "csv", "header");
+    
 }
 
 function setup() {
     canvas = createCanvas(800, 600);
+    canvas.parent('sketch-holder')
     slider = createSlider(1999, 2017, 1); // 2018 data is incomplete
+    slider.parent('sketch-holder')
     slider.position(width - 300, height - 70);
     slider.style('width', '200px');
     slider.style('z-index', '999');
+    
 
     slider.mouseReleased(() => {
         year = slider.value();

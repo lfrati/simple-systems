@@ -32,6 +32,9 @@ plugins:
 collections:
     projects:
         output: true
+
+data_dir: assets
+
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list
 # to override the default setting.
