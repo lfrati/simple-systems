@@ -308,8 +308,9 @@ class Node {
                 lerpColor(
                     restColor,
                     spikeColor,
-                    this.activation / (this.threshold + this.dampening + inhibition)
-                )
+                    this.activation /
+                        (this.threshold + this.dampening + inhibition),
+                ),
             );
             ellipse(this.pos.x, this.pos.y, size, size);
         }
@@ -319,7 +320,7 @@ class Node {
             this.pos.x,
             this.pos.y,
             node_diameter + (this.threshold + this.dampening + inhibition) * 2,
-            node_diameter + (this.threshold + this.dampening + inhibition) * 2
+            node_diameter + (this.threshold + this.dampening + inhibition) * 2,
         );
     }
 }

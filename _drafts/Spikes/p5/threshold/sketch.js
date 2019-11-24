@@ -78,7 +78,8 @@ function draw() {
         fill(255, 30);
         noStroke();
         textSize(40);
-        text('CLICK ME', 50, 70);
+        text('CLICK to', 33, 70);
+        text('SPIKE', 25, 170);
     }
 
     for (let outLink of links) {
@@ -111,7 +112,14 @@ function arrowhead(from, to, base, height, distance) {
     translate(to.pos.x, to.pos.y); // move the origin to the target the arrow is pointing to
     rotate(rot); // rotate to align the tip
     noStroke(); // strong independent arrows need no border
-    triangle(-distance / 2 - 1, 0, -distance / 2 - height, -base, -distance / 2 - height, +base);
+    triangle(
+        -distance / 2 - 1,
+        0,
+        -distance / 2 - height,
+        -base,
+        -distance / 2 - height,
+        +base,
+    );
     pop();
 }
 
@@ -172,7 +180,7 @@ class Activation {
         let levelColor = lerpColor(
             restColor,
             spikeColor,
-            this.level / (this.threshold + this.dampening)
+            this.level / (this.threshold + this.dampening),
         );
 
         to.color = levelColor;
@@ -192,14 +200,18 @@ class Activation {
             0,
             -(this.threshold + this.dampening) * this.magnification,
             50,
-            -(this.threshold + this.dampening) * this.magnification
+            -(this.threshold + this.dampening) * this.magnification,
         );
 
         textAlign(RIGHT, CENTER);
         textSize(13);
         noStroke();
         fill(100);
-        text('Threshold', -2, -(this.threshold + this.dampening) * this.magnification);
+        text(
+            'Threshold',
+            -2,
+            -(this.threshold + this.dampening) * this.magnification,
+        );
     }
 }
 
@@ -271,7 +283,11 @@ class Link {
         arrowhead(this.from, this.to, 4, 10, node_size - 3);
 
         for (let impulse of this.impulses) {
-            let tmp = p5.Vector.lerp(this.from.pos, this.to.pos, impulse / this.length);
+            let tmp = p5.Vector.lerp(
+                this.from.pos,
+                this.to.pos,
+                impulse / this.length,
+            );
             noStroke();
             fill(255);
             ellipse(tmp.x, tmp.y, 5, 5);
