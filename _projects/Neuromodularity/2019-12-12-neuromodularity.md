@@ -70,11 +70,20 @@ Press reset to sample a new network. Use the mouse wheel or click to release ton
 # Neural reservoirs 
 The topics we have introduced and discussed so far are particularly relevant for a specific branch of Machine Learning known as Reservoir Computing.
 {% raw %}
-
 <iframe class="track center" frameborder="0" marginheight="20" marginwidth="35" scrolling="no" onload="resizeIframe(this)" src="p5/inout/index.html"></iframe>
 {% endraw %}
 
 # The dangers of time
+
+{% raw %}
+<div style="width:iframe width px; font-size:80%; text-align:center; padding-bottom:30px;">
+<iframe class="track center" frameborder="0" marginheight="20" marginwidth="35" scrolling="no" onload="resizeIframe(this)" src="p5/time/index.html"></iframe>
+I: determines the threshold level, raising it activity will spread much less.<br/> 
+r: represents the connection radius, raising it the number of edges will increase.<br/> 
+Press reset to sample a new network. Use the mouse wheel or click to release tons of impulses.
+</div>
+{% endraw %}
+
 
 {% raw %}
 <script>
