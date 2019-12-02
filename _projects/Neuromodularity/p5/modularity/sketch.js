@@ -96,11 +96,11 @@ function draw() {
   image(staticBackground, 0, 0);
 
   // Draw FPS (rounded to 2 decimal places) at the bottom left of the screen
-  let fps = frameRate();
-  fill(255);
-  stroke(0);
-  textSize(15);
-  text("FPS: " + fps.toFixed(0), width - 100, height - 20);
+  // let fps = frameRate();
+  // fill(255);
+  // stroke(0);
+  // textSize(15);
+  // text("FPS: " + fps.toFixed(0), width - 100, height - 20);
 
   network.animate();
   network.update();
