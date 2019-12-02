@@ -25,6 +25,8 @@ let palette = [];
 let within = [];
 let between = [];
 
+let staticBackground;
+
 // Interface
 let max_signals = 1000; // Limit number of infected agents to avoid killing my computer
 
@@ -48,16 +50,23 @@ function reset() {
   network.computeCommunities();
   network.wireCommunities();
   network.modularize(mu);
+  staticBackground.background(50);
+  network.show(staticBackground);
   muSpan.html(" &#x3BC; : " + str(mu));
 }
 
 function setup() {
+  cnv = createCanvas(600, 600);
+  staticBackground = createGraphics(width, height);
+  staticBackground.clear();
+
+  // colors
   spikeColor = color(255, 0, 50);
   restColor = color(0, 65, 225);
-  cnv = createCanvas(600, 600);
   white = color(255, 255, 255);
   red = color(255, 0, 0);
   green = color(0, 255, 0);
+
   reset_btn = createButton("reset");
   reset_btn.mousePressed(() => {
     reset();
@@ -79,20 +88,20 @@ function setup() {
   muSpan.style("font-size:18pt");
 
   reset();
+  frameRate(30);
 }
 
 function draw() {
-  background(50);
+  // background(50);
+  image(staticBackground, 0, 0);
 
   // Draw FPS (rounded to 2 decimal places) at the bottom left of the screen
-  // let fps = frameRate();
-  // fill(255);
-  // stroke(0);
-  // textSize(15);
-  // text('FPS: ' + fps.toFixed(0), width - 100, height - 20);
+  let fps = frameRate();
+  fill(255);
+  stroke(0);
+  textSize(15);
+  text("FPS: " + fps.toFixed(0), width - 100, height - 20);
 
-  // network.show();
-  network.show();
   network.animate();
   network.update();
 }
@@ -267,12 +276,12 @@ class Network {
     }
   }
 
-  show() {
+  show(staticBackground) {
     for (let link of this.links) {
-      link.show(this.progress);
+      link.show(staticBackground);
     }
     for (let node of this.nodes) {
-      node.show();
+      node.show(staticBackground);
     }
   }
 }
@@ -283,7 +292,7 @@ class Node {
     this.id = ID;
     this.out = [];
     this.in = [];
-    this.base_threshold = network.commSize / 4;
+    this.base_threshold = (network.commSize - 1) / 3;
     this.activity = 0;
     this.threshold = this.base_threshold;
     this.fired = false;
@@ -314,17 +323,21 @@ class Node {
   //   }
   // }
 
-  show() {
-    noStroke(); // no border
-    fill(palette[node2comm[this.id]]);
-    ellipse(this.pos.x, this.pos.y, node_diameter, node_diameter);
+  show(staticBackground) {
+    staticBackground.noStroke(); // no border
+    staticBackground.fill(palette[node2comm[this.id]]);
+    staticBackground.ellipse(
+      this.pos.x,
+      this.pos.y,
+      node_diameter,
+      node_diameter
+    );
     // textSize(10);
     // text(str(this.id), this.pos.x + 4, this.pos.y);
   }
 
   animate() {
     noStroke();
-    let col = lerpColor(restColor, spikeColor, this.activity / this.threshold);
     if (this.fired) {
       fill("yellow");
     } else {
@@ -354,8 +367,11 @@ class Link {
   animate(progress) {
     if (this.payload > 0) {
       let tmp = p5.Vector.lerp(this.from.pos, this.to.pos, progress);
-      noStroke();
+      // paint link red if there are carriers travelling on it
+      stroke(255, 50, 50); // infected is reddish
+      line(this.from.pos.x, this.from.pos.y, this.to.pos.x, this.to.pos.y);
       fill(255);
+      noStroke();
       ellipse(tmp.x, tmp.y, 5 * this.payload);
       // stroke(255, 0, 0, 90);
       // strokeWeight(map(progress, 0, 1, 1, 6));
@@ -377,29 +393,29 @@ class Link {
     }
   }
 
-  show() {
-    strokeWeight(1);
-    // paint link red if there are carriers travelling on it
-    if (this.payload > 0) {
-      stroke(255, 50, 50); // infected is reddish
-    } else {
-      stroke(255, 50); // default is greyish
-    }
+  show(staticBackground) {
+    staticBackground.strokeWeight(1);
+    staticBackground.stroke(255, 50); // default is greyish
 
-    line(this.from.pos.x, this.from.pos.y, this.to.pos.x, this.to.pos.y);
-    arrowhead(this.from, this.to, 2, 6, node_diameter);
+    staticBackground.line(
+      this.from.pos.x,
+      this.from.pos.y,
+      this.to.pos.x,
+      this.to.pos.y
+    );
+    arrowhead(this.from, this.to, 2, 6, node_diameter, staticBackground);
   }
 }
 
 // to show the direction of the link, require some calculation but it's worth it.
-function arrowhead(from, to, base, height, distance) {
+function arrowhead(from, to, base, height, distance, canvas) {
   let rot = p5.Vector.sub(to.pos, from.pos).heading(); // get angle of the link
-  push();
-  translate(to.pos.x, to.pos.y); // move the origin to the target the arrow is pointing to
-  rotate(rot); // rotate to align the tip
-  noStroke(); // strong independent arrows need no border
-  fill(255, 50); // a bit of transparency, we want to see them if they overlap
-  triangle(
+  canvas.push();
+  canvas.translate(to.pos.x, to.pos.y); // move the origin to the target the arrow is pointing to
+  canvas.rotate(rot); // rotate to align the tip
+  canvas.noStroke(); // strong independent arrows need no border
+  canvas.fill(255, 50); // a bit of transparency, we want to see them if they overlap
+  canvas.triangle(
     -distance / 2 - 1,
     0,
     -distance / 2 - height,
@@ -407,5 +423,5 @@ function arrowhead(from, to, base, height, distance) {
     -distance / 2 - height,
     +base
   );
-  pop();
+  canvas.pop();
 }
