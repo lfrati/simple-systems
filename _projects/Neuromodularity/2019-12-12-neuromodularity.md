@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Neuromodularity"
+title: "A peek into Neuromodularity"
 date: 2019-11-12
 thumbnail: thumbnail.png
 dependencies:
@@ -125,7 +125,7 @@ Click to send signals in both networks and see how quickly their activation patt
 
 # Spiky lattices
 
-We finally reach the end of our introduction, we have discussed the role of space and time in growing our geometric networks. We can now state a bit more clearly what our intent is. Recent works on neural reservoirs have highlighted the relevance of modularity in forming useful reservoirs that can provide long lasting signals to learn from. It is especially apparent in the case where the reservoir uses hard thresholds as their source of non-linearity, and the resulting dynamic is very close to that of **complex contagion**, the relevance of having highly connected modules.
+We have discussed the role of space and time in growing our geometric networks so we can now state a bit more clearly what our intent is. Recent works on neural reservoirs have highlighted the relevance of modularity in forming useful reservoirs that can provide long lasting signals to learn from. It is especially apparent in the case where the reservoir uses hard thresholds as their source of non-linearity, and the resulting dynamic is very close to that of **complex contagion**, the relevance of having highly connected modules.
 In that scenario producing and sustaining spikes requires multiple simultaneous signals that have to come at just the right time. A tightly connected component can provide the push needed to cross those thresholds. Why not have a fully connected graph then? Because if all the nodes spike all the time then the information present in those spikes is almost none and hence the reservoir is unsuitable for learning. We are not going to perform learning in our experiments. We are going instead to focus our attention on the role of modularity and mechanisms that lead to its formation.
 
 In the following last sketch we show a simple scenario using a lattice network with local connections and low activation threshold of 3. Nodes are connects randomly with a local preference that scales linearly with distance. Use the slider to change the level of connectivity in the system. Use the mouse to send signals from certain nodes or use the button "spark" to send one signal from every node at the same time. The activity bar shows the number of nodes that are currently spiking (i.e. green for none, red for all) As you change the level of connectivity of the network you can observe that activity can either _saturate_ (i.e. almost all nodes fire all the time) or _vanish_ (i.e. the signals are not sufficient to cross the thresholds)
@@ -138,12 +138,25 @@ Move your pointer to any node on the left to select it (i.e. turn yellow) along 
 Click to send signals in both networks and see how quickly their activation patterns diverge because of absence/presence of time.
 </div>
 {% endraw %}
+
 # Optimal modularity
+We are now reaching the end of this whirlwind tour of neural reservoirs and geometric networks. The last piece we want to present is a recent result in "_Optimal modularity and memory capacity of neural reservoirs_" (Rodriguez et al.). In their work the authors show that in neural reservoirs an optimal balance between community formation and global connections can be found, so that the resulting reservoir maximise the learning capability of the systems it is used in. The experiments we are going to focus our attention on involve a parameter &#x3BC; that balances the ratio of local (i.e. within a community) vs global (i.e. between communities) connections.
+
+When &#x3BC; = 0 the connections are entirely local, which means that every node is connecting only to other nodes in the same community (defined a priori) &rarr; Maximal modularity.
+
+When &#x3BC; = 0.5 half of the connection of each node are made with nodes in the same community and half with nodes from the other communities &rarr; Minimal modularity.
+
+As &#x3BC; varies between 0 and 0.5 we can observe different behaviours of the system then we excite some neurons in response to an hypothetical outside stimulus. For values near 0 the communities are very strongly wired and are able to easily overcome the activation threshold needed for sustained spiking but the signal remains confined inside the community because of the lack of bridges to other communities. At the other end of the spectrum when &#x3BC; approaches 0.5 the input signals are able to reach most neurons in the network but the signal quickly dies out because the connection are too _spread out_ and unable to consistently reach the activation threshold.
+Between these two extreme is possible to find a balance point where the local structure is sufficiently tight to sustain spiking over long periods of time, and the amount of global connections is sufficient to spread the signals to other communities.
+
+Below you can see a sketch that shows a simplified version of the setup we just mentioned.
+There are 9 communities of 16 nodes each that start initially fully wired within their local communities. As you increase the value of &#x3BC; local connections are selected and random and turned into global connections by rewiring them to connect to a random node from another community. This process is repeated until the ratio of local/global connections equals &#x3BC;. This process involves only rewiring so the overall number of connections remains the same, only the wiring structure is changed. The problem has been simplified by assuming that every connections is of equal unitary weight and that interactions are only excitatory. This obviously reduces the possible dynamics of the system but is still sufficient to see how different levels of modularity influence the outcomes.
+
 {% raw %}
 <div style="width:iframe width px; font-size:80%; text-align:center; padding-bottom:30px;">
 <iframe class="track center" frameborder="0" marginheight="20" marginwidth="35" scrolling="no" onload="resizeIframe(this)" src="p5/modularity/index.html"></iframe>
-Move your pointer to any node on the left to select it (i.e. turn yellow) along with the corresponding node on the right.<br/>
-Click to send signals in both networks and see how quickly their activation patterns diverge because of absence/presence of time.
+Click on nodes to send signals to their neighbours. Use the "reset" button to sample new networks.<br/>
+Use the "seed" button to send signals to an entire community at once. Use the slider to adjust the value of &#x3BC;. 
 </div>
 {% endraw %}
 {% raw %}
