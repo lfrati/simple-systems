@@ -15,12 +15,39 @@ p    {text-align: justify;}
   display: table;
   padding: 10px;
 }
+
+#wrapper { 
+    height: auto; 
+    width: 600px;
+    margin: auto;
+    padding-bottom: 30px;
+    text-align: center;
+    font-size: 80%;
+} 
+#home1 { 
+    width: 47.5%; 
+    float: left; 
+    margin-right: 5%;
+} 
+
+#home2 { 
+    width: 47.5%; 
+    float: right; 
+}
+
+.column {
+  float: 50%;
+  padding: 5px;
+}
+
+.row {
+  display: flex;
+}
 </style>
 
 {% endraw %}
 
 _Warning: All sketches in this page are running on your machine, may the gods of computing bestow their blessing upon you._
-
 # Geometric graphs
 
 When working with networks it is common to assume that edge properties and node properties are somewhat independent. Nodes often contain information about the entity they represent and edges describe the relationships between those entities. However in practice it is often the case that nodes may be embedded in some space of interested. Let us consider the case where nodes represent cities and edges are the roads between them. It is intuitive to assume that each node (i.e. city) is associated with some coordinates. Given the coordinates of a node it is natural to assume that each link (i.e. road) has a certain length that might not be explicitly listed among the properties of those edges.
@@ -93,9 +120,9 @@ You can see a schematic version of this architecture in the following sketch. On
 
 <div style="width: 820px; margin: auto; font-size:80%; text-align:center; padding-bottom:30px;">
 <iframe class="track center" frameborder="0" marginheight="20" marginwidth="35" scrolling="no" onload="resizeIframe(this)" src="p5/inout/index.html"></iframe>
-Left: Set the input pattern by toggling on/off the white/black squares.<br/> 
-Center: Press <font color="red">"Fire"</font> to send the signal inside the neural reservoir and watch it propagate through it<br/> 
-Right: When signals reach the green units the corresponding node activity spike is plotted on the bottom ECG<br/> 
+<b>Left</b>: Set the input pattern by toggling on/off the white/black squares.<br/> 
+<b>Center</b>: Press <font color="red">"Fire"</font> to send the signal inside the neural reservoir and watch it propagate through it<br/> 
+<b>Right</b>: When signals reach the green units the corresponding node activity spike is plotted on the bottom ECG<br/> 
 Press "reset" to sample a new topology, use the sliders to control the connection radius and the activation thresholds.
 </div>
 {% endraw %}
@@ -116,8 +143,8 @@ On the left we have a version of our network where edges are crossed at a consta
 
 <div style="width:iframe width px; font-size:80%; text-align:center; padding-bottom:30px;">
 <iframe class="track center" frameborder="0" marginheight="20" marginwidth="35" scrolling="no" onload="resizeIframe(this)" src="p5/time/index.html"></iframe>
-Left: signals propagate at fixed speed so crossing longer edges take more time.<br/> 
-Right: every edge takes the same time to be travelled so all the signals arrive simultaneously at their destination.<br/> 
+<b>Left</b>: signals propagate at fixed speed so crossing longer edges take more time.<br/> 
+<b>Right</b>: every edge takes the same time to be travelled so all the signals arrive simultaneously at their destination.<br/> 
 Move your pointer to any node on the left to select it (i.e. turn yellow) along with the corresponding node on the right.<br/>
 Click to send signals in both networks and see how quickly their activation patterns diverge because of absence/presence of time.
 </div>
@@ -159,6 +186,67 @@ Click on nodes to send signals to their neighbours. Use the "reset" button to sa
 Use the "seed" button to send signals to an entire community at once. Use the slider to adjust the value of &#x3BC;. 
 </div>
 {% endraw %}
+
+# Information Diffusion
+
+How does the system coordinates itself as a whole while relying only on local interactions? And how much information must those signals carry? Our first attempt at modelling local interactions involves relying on the spiking levels of nodes. More specifically each node that spikes releases a "virtual" medium that carries information about the activity levels to other nodes in its Moore neighbourhood. Neighbouring nodes that receive this info from multiple source gather it to form an approximate, temporally delayed representation of the overall activity of the whole system. 
+
+Below we can see an example of this information spreading in a chemical looking fashion. The short clip shows, for each node in the network, the absolute difference between their local information and the actual activity level of the system. Darker colors represent nodes that have a good approximation of the global spiking levels. Brighter colors instead represent nodes that are lagging behind. We can see information fronts slowly diffuse throught the network as the local information is passed from node to node.
+
+{% raw %}
+<div id="wrapper">
+  <video muted autoplay loop>
+      <source src="gossip_diffusion.mp4" type="video/mp4">
+  </video>
+<p style="text-align: center;">Information diffusion across the network. Each cell is colored based on the absolute difference between the local information and the true activity of the network.</p>
+</div>
+{% endraw %}
+Now that approximate spiking information is available to nodes we can define some rules to guide edge formation.
+The nodes in the network are placed on a 2D lattice as in the previous examples, and the initial edges are sampled from bivariate gaussian distributions that favor local connections. This approach create initial networks that have a tunable degree of locality but are not optimised for spreading.
+{% raw %}
+<div style="text-align: center; padding-bottom: 30px;">
+    <img src="gaussian_sample.png" style="width:50%"/>
+    <figcaption style="text-align: center; font-size: 80%">Edge formation is biased using a local gaussian distribution. The plot shows 10k sampled edges for node in position (10,20). Darker shades of blue represent edges that are sampled more frequently. On the sides the marginal gaussian distributions are shown using kernel smoothing.</figcaption>
+</div>
+{% endraw %}
+
+The algorithm we have tested to promote locality works as follows:
+- If the node being optimised is **spiking**: the spiking information is used to locate nodes that are not spiking. This is done by multiplying it by the gaussian distribution used for edge formation so that close by nodes with low activity are more likely to be sampled.
+- If the node being optimised is **not spiking**: the spiking information is used to locate nodes that have been consistently spiking and an edge from that node to the current node is formed by rewiring one of the other outgoing connections from the current node.
+This approach is aimed at simulating a simple setting where neurons that spike release "chemical" that favour the formation of new outgoing connections while neurons that don't reach the spiking threshold undergo a reverse process that stimulates forming new connections with them.
+
+Unfortunately this approach doesn't seem to lead to the emergence of modularity that we are looking for. Quite the contrary it seems that even when networks start from perfect modularity (&#x3BC; = 0) the modular structure is degrade rather than improved. To understand why this might be happening we can look at the first few iterations of our "optimisation" process. The network in questions is formed by 9 communities arranged in a 3x3 grid. During each episode every pre-determined modules is artificially sparked in turn. Activity is left spreading for a number of iterations sufficient to allow for every community in the network to start spiking (or until the activity levels drop to zero).
+As we can see below as simulation progress we can observe that the signals start reaching farther and father nodes (activity pane on the left shows more spread out activity patterns). The nodes able to spike become fewer and fewer (spiking pane on the right show spikes rapidly stopping, until each episode resembles a blip).
+
+{% raw %}
+<div id="wrapper">
+  <video id="home1" muted autoplay loop>
+      <source src="failed_activity_cropped.mp4" type="video/mp4">
+  </video>
+  <video id="home2" muted autoplay loop>
+      <source src="failed_spikes_cropped.mp4" type="video/mp4">
+  </video>
+  <p style="text-align: center;"><b>On the left</b>: Activity levels of the neurons that receive signals, as the modularity decreases the signals spread over a larger area. <br/> <b>On the right</b>: neurons that manage to cross the spiking threshold. As the modularity decreases fewer and fewer neurons are able to spike (as activity decays to zero faster and faster the episodes become shorted which makes the recording look as if accelerating).</p>
+</div>
+{% endraw %}
+
+If we take a closer look at the network topology we can observe the effect of our local rules. Below you can see, on the left the initial perfectly modular structure, and on the right the results of several rounds of "optimisation". We can notice that several nodes have a large number of incoming/outgoing connections. This happens because nodes that are selected as the best candidates for a specific nodes are likely to be the best candidates also for all it's neighbours. The diffusion mechanism has allowed nodes to access global information through local mechanisms but they lack the cooperation mechanisms needed to avoid over-exploiting that information.
+
+{% raw %}
+<div class="row">
+  <div class="column">
+    <img src="total_modularity.png" />
+    <figcaption style="text-align: center; font-size: 80%">Initial modularity.</figcaption>
+  </div>
+  <div class="column">
+    <img src="failed_modularity.png" />
+    <figcaption style="text-align: center; font-size: 80%">Disrupted modularity.</figcaption>
+  </div>
+</div>
+{% endraw %}
+
+
+
 {% raw %}
 <script>
 function resizeIframe(obj) {
