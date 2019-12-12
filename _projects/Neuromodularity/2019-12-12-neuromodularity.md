@@ -167,14 +167,14 @@ Click to send signals in both networks and see how quickly their activation patt
 {% endraw %}
 
 # Optimal modularity
-We are now reaching the end of this whirlwind tour of neural reservoirs and geometric networks. The last piece we want to present is a recent result in "_Optimal modularity and memory capacity of neural reservoirs_" (Rodriguez et al.). In their work the authors show that in neural reservoirs an optimal balance between community formation and global connections can be found, so that the resulting reservoir maximise the learning capability of the systems it is used in. The experiments we are going to focus our attention on involve a parameter &#x3BC; that balances the ratio of local (i.e. within a community) vs global (i.e. between communities) connections.
+We are now reaching the end of this whirlwind tour of neural reservoirs and geometric networks. The last piece we want to present is a recent result in "_Optimal modularity and memory capacity of neural reservoirs_" (Rodriguez et al.). In their work the authors show that in neural reservoirs an optimal balance between community formation and global connections can be found, so that the resulting reservoir maximise the learning capability of the systems it is used in. The experiments we are going to focus our attention on involve a **parameter &#x3BC;** that balances the ratio of local (i.e. within a community) vs global (i.e. between communities) connections.
 
-When &#x3BC; = 0 the connections are entirely local, which means that every node is connecting only to other nodes in the same community (defined a priori) &rarr; Maximal modularity.
+- When &#x3BC; = 0 the connections are entirely local, which means that every node is connecting only to other nodes in the same community (defined a priori) &rarr; Maximal modularity.
 
-When &#x3BC; = 0.5 half of the connection of each node are made with nodes in the same community and half with nodes from the other communities &rarr; Minimal modularity.
+- When &#x3BC; = 0.5 half of the connection of each node are made with nodes in the same community and half with nodes from the other communities &rarr; Minimal modularity.
 
 As &#x3BC; varies between 0 and 0.5 we can observe different behaviours of the system then we excite some neurons in response to an hypothetical outside stimulus. For values near 0 the communities are very strongly wired and are able to easily overcome the activation threshold needed for sustained spiking but the signal remains confined inside the community because of the lack of bridges to other communities. At the other end of the spectrum when &#x3BC; approaches 0.5 the input signals are able to reach most neurons in the network but the signal quickly dies out because the connection are too _spread out_ and unable to consistently reach the activation threshold.
-Between these two extreme is possible to find a balance point where the local structure is sufficiently tight to sustain spiking over long periods of time, and the amount of global connections is sufficient to spread the signals to other communities.
+Between these two extreme is possible to find a **balance** point where the local structure is sufficiently tight to sustain spiking over long periods of time, and the amount of global connections is sufficient to spread the signals to other communities.
 
 Below you can see a sketch that shows a simplified version of the setup we just mentioned.
 There are 9 communities of 16 nodes each that start initially fully wired within their local communities. As you increase the value of &#x3BC; local connections are selected and random and turned into global connections by rewiring them to connect to a random node from another community. This process is repeated until the ratio of local/global connections equals &#x3BC;. This process involves only rewiring so the overall number of connections remains the same, only the wiring structure is changed. The problem has been simplified by assuming that every connections is of equal unitary weight and that interactions are only excitatory. This obviously reduces the possible dynamics of the system but is still sufficient to see how different levels of modularity influence the outcomes.
@@ -187,15 +187,54 @@ Use the "seed" button to send signals to an entire community at once. Use the sl
 </div>
 {% endraw %}
 
+# Evolved communities
+
+{% raw %}
+<div style="text-align: center; padding-bottom: 30px;">
+    <img src="evolved.png" style="width:80%"/>
+    <figcaption style="text-align: center; font-size: 80%">Topology evolved using the describe fitness functions. Various communities have been joined together but only 2 nodes out of 21 have been misassigned.</figcaption>
+</div>
+{% endraw %}
+
+
+# Minimal modularity
+
+How much connectivity is essential to ensure the signal from a community can spread to all the others? What kind of wiring is crucial to keep a community alive? If we consider the constraints imposed by the threshold function we use in our experiments we can calculate minimal conditions for survival. In particular we can identify two necessary components in our communities:
+- a "surviving" fully connected sub-component capable of overcoming the threshold set
+- an "activating" set of edges that keep the rest of the community alive
+- a "spreading" set of connections that are able to propagate the signal to neighbouring communities.
+
+Once an activation threshold is determined then a minimal surviving **clique** is a set on _threshold + 1_ fully-connected nodes. We can see an example of that in the image below, highlighted in red. In the image below we can see in blue the set of weights needed to keep the community alive. The remaining edges can then be used to spread the signal.
+
+{% raw %}
+<div style="text-align: center; padding-bottom: 30px;">
+    <img src="minimal_community.png" style="width:30%"/>
+    <figcaption style="text-align: center; font-size: 80%">In <font color="red">red</font> a fully connected sub-component of 3+1 nodes that can survive a threshold of 3. In <font color="blue">blue</font> the additional edges needed to make the rest of the community spike. Remaining connections can be used to make the adjacent communities spike.</figcaption>
+</div>
+{% endraw %}
+
+To minimally connect two communities we need to make spike every node in the kernel of the community we want to excite. Since the kernel contains _threshold+1_ nodes and each of them needs to receive at least _threshold_ signals for a total of _threshold x (threshold + 1)_ edges. We can see this set up in the sketch below. Each community is connected to the next one forming a chain of communities that spans the whole network. The whole structure is resting on a precarious **equilibrium** since the network has barely enough signal to overcome the threshold barrier. We can see an example of this by using the "sabotage" button below. If enabled one single edge is removed from every center node of each community (the crippled node is shown in black). In this new regime the damaged kernel doesn't have enough activity to keep spiking so after propagating the signal the activity in the community dies out. This creates an interesting effect where the signal travels along the chain of communities like a propagating wave.
+
+{% raw %}
+<div style="width:iframe width px; font-size:80%; text-align:center; padding-bottom:30px;">
+<iframe class="track center" frameborder="0" marginheight="20" marginwidth="35" scrolling="no" onload="resizeIframe(this)" src="p5/minimal/index.html"></iframe>
+Use the "seed" button to manually spark the first community.<br/> Use the "sabotage" checkbox to remove one edge from each community. <br/> Nodes missing an edge are shown in red, kernel nodes in red and spreading nodes in blue.
+</div>
+{% endraw %}
+
+This seemingly secondary results is more interesting than expected. What we have obtained seeking the minimal possible wiring is a setup where each community is essentially a node of a network in "**community space**". The nodes in this new space are supersets of the previous nodes where the "complex contagion" property has been assimilated into the activation function. Consider for example the case where activity is both excitatory and inhibitory, the previously simple threshold function that controls the activity in "nodes space" now becomes a much more complex stateful function in "community space". This complexification mechanism can allow us to appreciate the emergence of complex behaviour in networks governed by simple activation functions. Especially so if we consider that the network itself can change over time as a function of its own activity.
+How does a network evolve over time and what are the mechanism behind it? We are going to talk about it in the next section.
+
+
 # Information Diffusion
 
-How does the system coordinates itself as a whole while relying only on local interactions? And how much information must those signals carry? Our first attempt at modelling local interactions involves relying on the spiking levels of nodes. More specifically each node that spikes releases a "virtual" medium that carries information about the activity levels to other nodes in its Moore neighbourhood. Neighbouring nodes that receive this info from multiple source gather it to form an approximate, temporally delayed representation of the overall activity of the whole system. 
+How does the system coordinates itself as a whole while relying only on local interactions? And how much information must those signals carry? Our first attempt at modelling local interactions involves relying on the spiking levels of nodes. More specifically each node that spikes releases a "virtual" medium that carries information about the activity levels to other nodes in its **Moore** neighbourhood. Neighbouring nodes that receive this info from multiple source gather it to form an approximate, temporally delayed representation of the overall activity of the whole system. 
 
 Below we can see an example of this information spreading in a chemical looking fashion. The short clip shows, for each node in the network, the absolute difference between their local information and the actual activity level of the system. Darker colors represent nodes that have a good approximation of the global spiking levels. Brighter colors instead represent nodes that are lagging behind. We can see information fronts slowly diffuse throught the network as the local information is passed from node to node.
 
 {% raw %}
 <div id="wrapper">
-  <video muted autoplay loop>
+  <video muted autoplay loop >
       <source src="gossip_diffusion.mp4" type="video/mp4">
   </video>
 <p style="text-align: center;">Information diffusion across the network. Each cell is colored based on the absolute difference between the local information and the true activity of the network.</p>
@@ -220,17 +259,17 @@ As we can see below as simulation progress we can observe that the signals start
 
 {% raw %}
 <div id="wrapper">
-  <video id="home1" muted autoplay loop>
+  <video id="home1" muted  autoplay loop>
       <source src="failed_activity_cropped.mp4" type="video/mp4">
   </video>
-  <video id="home2" muted autoplay loop>
+  <video id="home2" muted  autoplay loop>
       <source src="failed_spikes_cropped.mp4" type="video/mp4">
   </video>
   <p style="text-align: center;"><b>On the left</b>: Activity levels of the neurons that receive signals, as the modularity decreases the signals spread over a larger area. <br/> <b>On the right</b>: neurons that manage to cross the spiking threshold. As the modularity decreases fewer and fewer neurons are able to spike (as activity decays to zero faster and faster the episodes become shorted which makes the recording look as if accelerating).</p>
 </div>
 {% endraw %}
 
-If we take a closer look at the network topology we can observe the effect of our local rules. Below you can see, on the left the initial perfectly modular structure, and on the right the results of several rounds of "optimisation". We can notice that several nodes have a large number of incoming/outgoing connections. This happens because nodes that are selected as the best candidates for a specific nodes are likely to be the best candidates also for all it's neighbours. The diffusion mechanism has allowed nodes to access global information through local mechanisms but they lack the cooperation mechanisms needed to avoid over-exploiting that information.
+If we take a closer look at the network topology we can observe the effect of our local rules. Below you can see, on the left the initial perfectly modular structure, and on the right the results of several rounds of "optimisation". We can notice that several nodes have a large number of incoming/outgoing connections. This happens because nodes that are selected as the best candidates for a specific nodes are likely to be the best candidates also for all it's neighbours. The diffusion mechanism has allowed nodes to access global information through local mechanisms but they lack the **cooperation** mechanisms needed to avoid over-exploiting that information.
 
 {% raw %}
 <div class="row">
@@ -244,7 +283,6 @@ If we take a closer look at the network topology we can observe the effect of ou
   </div>
 </div>
 {% endraw %}
-
 
 
 {% raw %}
