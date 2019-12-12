@@ -45,7 +45,7 @@ function mouseWheel(event) {
 }
 
 function ui() {
-  let cnv = createCanvas(700, 600);
+  let cnv = createCanvas(700, 500);
   cnv.mouseOver(() => {
     focused = true;
   });

@@ -118,7 +118,7 @@ This neural reservoir is then connected to two smaller layers, one that sits bet
 You can see a schematic version of this architecture in the following sketch. On the left the white/black squares represents input units. The signals from those units are fed into the neural reservoir represented by the random geometric graph in the middle. The signals propagate through the neural reservoir before being read by the green output units on the right. The signals received by output units are graphed under the network in an ECG style.
 {% raw %}
 
-<div style="width: 820px; margin: auto; font-size:80%; text-align:center; padding-bottom:30px;">
+<div style="width:iframe width px; font-size:80%; text-align:center; padding-bottom:30px;">
 <iframe class="track center" frameborder="0" marginheight="20" marginwidth="35" scrolling="no" onload="resizeIframe(this)" src="p5/inout/index.html"></iframe>
 <b>Left</b>: Set the input pattern by toggling on/off the white/black squares.<br/> 
 <b>Center</b>: Press <font color="red">"Fire"</font> to send the signal inside the neural reservoir and watch it propagate through it<br/> 
@@ -188,14 +188,16 @@ Use the "seed" button to send signals to an entire community at once. Use the sl
 {% endraw %}
 
 # Evolved communities
+ A natural question to ask is "Can a similar optimal modularity be grown?". To test this possibility we have employed an evolutionary algorithm that has been optimizing a fitness function that explicitly rewards spreading between communities. During each epoch of our evolutionary training each of the communities in our network has been artificially spiked. This can be seen as receiving an input from outside, like would happen when a contiguous brain region receives sensory inputs. 
+
+ The results have then been analysed using some standard modularity detection algorithms such as **Louvain**. As can be seen below such optimal modularity is almost entirely recovered and the networks evolve toward a &#x3BC; measure of roughly 0.4, which is consistent with the results obtained in other studies. Some of the communities identified using the Louvain measure have been joined together but we can still identify the original block structure. In all experiments the center community can clearly distinguished from the other due to the specific setting used. As the only "central" community in close proximity to all other it can play a key role in facilitating the spread of information between distant communities.
 
 {% raw %}
 <div style="text-align: center; padding-bottom: 30px;">
     <img src="evolved.png" style="width:80%"/>
-    <figcaption style="text-align: center; font-size: 80%">Topology evolved using the describe fitness functions. Various communities have been joined together but only 2 nodes out of 21 have been misassigned.</figcaption>
+    <figcaption style="text-align: center; font-size: 80%">Topology evolved using the describe fitness functions. Various communities have been joined together but only 2 nodes out of 81 have been assigned to the wrong super-community.</figcaption>
 </div>
 {% endraw %}
-
 
 # Minimal modularity
 
@@ -269,7 +271,7 @@ As we can see below as simulation progress we can observe that the signals start
 </div>
 {% endraw %}
 
-If we take a closer look at the network topology we can observe the effect of our local rules. Below you can see, on the left the initial perfectly modular structure, and on the right the results of several rounds of "optimisation". We can notice that several nodes have a large number of incoming/outgoing connections. This happens because nodes that are selected as the best candidates for a specific nodes are likely to be the best candidates also for all it's neighbours. The diffusion mechanism has allowed nodes to access global information through local mechanisms but they lack the **cooperation** mechanisms needed to avoid over-exploiting that information.
+If we take a closer look at the network topology we can observe the effect of our local rules. Below you can see, on the left the initial perfectly modular structure, and on the right the results of several rounds of "optimisation". We can notice that several nodes have a large number of incoming/outgoing connections. This happens because nodes that are selected as the best candidates for a specific nodes are likely to be the best candidates also for all it's neighbours. The diffusion mechanism has allowed nodes to access global information through local mechanisms but they lack the **cooperation** mechanisms needed to avoid **over-exploiting** that information.
 
 {% raw %}
 <div class="row">

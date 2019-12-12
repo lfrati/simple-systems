@@ -43,7 +43,7 @@ function setup() {
 }
 
 function ui() {
-  let cnv = createCanvas(800, 700);
+  let cnv = createCanvas(700, 600);
   cnv.mouseOver(() => {
     focused = true;
   });
@@ -291,6 +291,9 @@ function draw() {
     fill(255);
     stroke(255);
 
+    plotActivity();
+    image(plot, 0, height - 180);
+
     for (let link of links) {
       link.show();
       link.update();
@@ -309,9 +312,6 @@ function draw() {
       node.show();
       node.update();
     }
-
-    plotActivity();
-    image(plot, 0, height - 180);
   }
 }
 
