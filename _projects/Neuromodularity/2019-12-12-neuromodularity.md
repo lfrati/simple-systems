@@ -199,34 +199,6 @@ Use the "seed" button to send signals to an entire community at once. Use the sl
 </div>
 {% endraw %}
 
-# Minimal modularity
-
-How much connectivity is essential to ensure the signal from a community can spread to all the others? What kind of wiring is crucial to keep a community alive? If we consider the constraints imposed by the threshold function we use in our experiments we can calculate minimal conditions for survival. In particular we can identify two necessary components in our communities:
-- a "surviving" fully connected sub-component capable of overcoming the threshold set
-- an "activating" set of edges that keep the rest of the community alive
-- a "spreading" set of connections that are able to propagate the signal to neighbouring communities.
-
-Once an activation threshold is determined then a minimal surviving **clique** is a set on _threshold + 1_ fully-connected nodes. We can see an example of that in the image below, highlighted in red. In the image below we can see in blue the set of weights needed to keep the community alive. The remaining edges can then be used to spread the signal.
-
-{% raw %}
-<div style="text-align: center; padding-bottom: 30px;">
-    <img src="minimal_community.png" style="width:30%"/>
-    <figcaption style="text-align: center; font-size: 80%">In <font color="red">red</font> a fully connected sub-component of 3+1 nodes that can survive a threshold of 3. In <font color="blue">blue</font> the additional edges needed to make the rest of the community spike. Remaining connections can be used to make the adjacent communities spike.</figcaption>
-</div>
-{% endraw %}
-
-To minimally connect two communities we need to make spike every node in the kernel of the community we want to excite. Since the kernel contains _threshold+1_ nodes and each of them needs to receive at least _threshold_ signals for a total of _threshold x (threshold + 1)_ edges. We can see this set up in the sketch below. Each community is connected to the next one forming a chain of communities that spans the whole network. The whole structure is resting on a precarious **equilibrium** since the network has barely enough signal to overcome the threshold barrier. We can see an example of this by using the "sabotage" button below. If enabled one single edge is removed from every center node of each community (the crippled node is shown in black). In this new regime the damaged kernel doesn't have enough activity to keep spiking so after propagating the signal the activity in the community dies out. This creates an interesting effect where the signal travels along the chain of communities like a propagating wave.
-
-{% raw %}
-<div style="width:iframe width px; font-size:80%; text-align:center; padding-bottom:30px;">
-<iframe class="track center" frameborder="0" marginheight="20" marginwidth="35" scrolling="no" onload="resizeIframe(this)" src="p5/minimal/index.html"></iframe>
-Use the "seed" button to manually spark the first community.<br/> Use the "sabotage" checkbox to remove one edge from each community. <br/> Nodes missing an edge are shown in red, kernel nodes in red and spreading nodes in blue.
-</div>
-{% endraw %}
-
-This seemingly secondary results is more interesting than expected. What we have obtained seeking the minimal possible wiring is a setup where each community is essentially a node of a network in "**community space**". The nodes in this new space are supersets of the previous nodes where the "complex contagion" property has been assimilated into the activation function. Consider for example the case where activity is both excitatory and inhibitory, the previously simple threshold function that controls the activity in "nodes space" now becomes a much more complex stateful function in "community space". This complexification mechanism can allow us to appreciate the emergence of complex behaviour in networks governed by simple activation functions. Especially so if we consider that the network itself can change over time as a function of its own activity.
-How does a network evolve over time and what are the mechanism behind it? We are going to talk about it in the next section.
-
 
 # Information Diffusion
 
@@ -285,6 +257,33 @@ If we take a closer look at the network topology we can observe the effect of ou
   </div>
 </div>
 {% endraw %}
+
+# Minimal modularity
+
+How much connectivity is essential to ensure the signal from a community can spread to all the others? What kind of wiring is crucial to keep a community alive? If we consider the constraints imposed by the threshold function we use in our experiments we can calculate minimal conditions for survival. In particular we can identify two necessary components in our communities:
+- a "surviving" fully connected sub-component capable of overcoming the threshold set
+- an "activating" set of edges that keep the rest of the community alive
+- a "spreading" set of connections that are able to propagate the signal to neighbouring communities.
+
+Once an activation threshold is determined then a minimal surviving **clique** is a set on _threshold + 1_ fully-connected nodes. We can see an example of that in the image below, highlighted in red. In the image below we can see in blue the set of weights needed to keep the community alive. The remaining edges can then be used to spread the signal.
+
+{% raw %}
+<div style="text-align: center; padding-bottom: 30px;">
+    <img src="minimal_community.png" style="width:30%"/>
+    <figcaption style="text-align: center; font-size: 80%">In <font color="red">red</font> a fully connected sub-component of 3+1 nodes that can survive a threshold of 3. In <font color="blue">blue</font> the additional edges needed to make the rest of the community spike. Remaining connections can be used to make the adjacent communities spike.</figcaption>
+</div>
+{% endraw %}
+
+To minimally connect two communities we need to make spike every node in the kernel of the community we want to excite. Since the kernel contains _threshold+1_ nodes and each of them needs to receive at least _threshold_ signals for a total of _threshold x (threshold + 1)_ edges. We can see this set up in the sketch below. Each community is connected to the next one forming a chain of communities that spans the whole network. The whole structure is resting on a precarious **equilibrium** since the network has barely enough signal to overcome the threshold barrier. We can see an example of this by using the "sabotage" button below. If enabled one single edge is removed from every center node of each community (the crippled node is shown in black). In this new regime the damaged kernel doesn't have enough activity to keep spiking so after propagating the signal the activity in the community dies out. This creates an interesting effect where the signal travels along the chain of communities like a propagating wave.
+
+{% raw %}
+<div style="width:iframe width px; font-size:80%; text-align:center; padding-bottom:30px;">
+<iframe class="track center" frameborder="0" marginheight="20" marginwidth="35" scrolling="no" onload="resizeIframe(this)" src="p5/minimal/index.html"></iframe>
+Use the "seed" button to manually spark the first community.<br/> Use the "sabotage" checkbox to remove one edge from each community. <br/> Nodes missing an edge are shown in red, kernel nodes in red and spreading nodes in blue.
+</div>
+{% endraw %}
+
+This seemingly secondary results is more interesting than expected. What we have obtained seeking the minimal possible wiring is a setup where each community is essentially a node of a network in "**community space**". The nodes in this new space are supersets of the previous nodes where the "complex contagion" property has been assimilated into the activation function. Consider for example the case where activity is both excitatory and inhibitory, the previously simple threshold function that controls the activity in "nodes space" now becomes a much more complex stateful function in "community space". This complexification mechanism can allow us to appreciate the emergence of complex behaviour in networks governed by simple activation functions. Especially so if we consider that the network itself can change over time as a function of its own activity.
 
 
 {% raw %}
