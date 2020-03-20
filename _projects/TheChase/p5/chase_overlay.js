@@ -27,6 +27,8 @@ function setup() {
 
     startPos = createVector(0, 0);
     serpent = new Serpent();
+
+    frameRate(30)
 }
 
 function draw() {
