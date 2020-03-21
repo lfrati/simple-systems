@@ -251,14 +251,6 @@ function setup() {
     worldLayer.text(node.name, x + radius + off_x, y + off_y);
   }
 
-  worldLayer.fill(80, 0, 120);
-  worldLayer.textSize(16);
-  worldLayer.text(
-    "Press i to infect city\nSelect color and press c to cure",
-    5,
-    20
-  );
-
   image(worldLayer, 0, 0);
   frameRate(20);
   cursor(CROSS);
