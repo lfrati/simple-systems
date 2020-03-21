@@ -49,7 +49,7 @@ class UI {
     });
     this.locality_color = color(219, 45, 33);
 
-    this.speedup = createSlider(1, 20, 10, 1);
+    this.speedup = createSlider(1, 20, 1, 1);
     this.speedup.position(this.x + this.locality_width + 130, this.y + 10);
     this.speedup_width = 60;
     this.speedup.style(`width : ${this.speedup_width}px`);
@@ -275,6 +275,7 @@ function setup() {
 function show_paths(node) {
   // show member paths
   for (let member of node.members) {
+    member.show();
     for (let edge of member.path) {
       edge.show();
     }
