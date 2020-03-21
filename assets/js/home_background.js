@@ -37,6 +37,7 @@ function setup() {
     strokeCap(SQUARE);
 
     populate();
+    frameRate(30);
 }
 
 function connectMouse() {
